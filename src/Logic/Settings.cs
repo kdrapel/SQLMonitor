@@ -8,8 +8,7 @@ using Xnlab.SQLMon.Common;
 
 namespace Xnlab.SQLMon.Logic
 {
-    public enum AnalysisTypes
-    {
+    public enum AnalysisTypes {
         DatabasesSpace,
         TablesSpace,
         Performance,
@@ -19,32 +18,29 @@ namespace Xnlab.SQLMon.Logic
         WaitingTasks,
         ExecutionCount,
         Io,
-        Cpu,
+        Cpu
     }
 
-    public enum ActivityTypes
-    {
+    public enum ActivityTypes {
         Process = 0,
         Job = 1
     }
 
-    public enum AlertTypes
-    {
+    public enum AlertTypes {
         Sql = 0,
-        Server = 1,
+
+        Server = 1
         //CPU = 2,
         //Memory = 3,
         //Diskspace = 4
     }
 
-    public enum AuthTypes
-    {
+    public enum AuthTypes {
         Windows = 1,
         SqlServer = 0
     }
 
-    public enum AnalysisResultTypes
-    {
+    public enum AnalysisResultTypes {
         DiskFreeSpace = 1,
         DatabaseLogSpace = 2,
         TableIndexSpace = 3,
@@ -54,21 +50,18 @@ namespace Xnlab.SQLMon.Logic
         None = 0
     }
 
-    public enum DatabaseFileTypes : int
-    {
+    public enum DatabaseFileTypes {
         Data = 0,
         Log = 1
     }
 
-    public enum TableIndexSpaceRules : int
-    {
+    public enum TableIndexSpaceRules {
         DataIndexSpaceRatio = 0,
         DatabaseTableSpaceRatio = 1,
         IndexEfficency = 2
     }
 
-    public class AnalysisResult
-    {
+    public class AnalysisResult {
         public AnalysisResultTypes ResultType { get; set; }
         public string ObjectName { get; set; }
         public decimal ReferenceValue { get; set; }
@@ -79,14 +72,17 @@ namespace Xnlab.SQLMon.Logic
     }
 
     [Serializable]
-    public class ServerInfoEx : ServerInfo
-    {
+    public class ServerInfoEx : ServerInfo {
         public bool IsServer { get; set; }
     }
 
     [Serializable]
-    public class ServerInfo
-    {
+    public class ServerInfo {
+
+        public ServerInfo() {
+            IsEncrypted = false;
+        }
+
         public AuthTypes AuthType { get; set; }
         public string User { get; set; }
         public string Password { get; set; }
@@ -95,25 +91,25 @@ namespace Xnlab.SQLMon.Logic
         public string Database { get; set; }
         internal bool IsAzure { get; set; }
 
-        public ServerInfo()
-        {
-            IsEncrypted = false;
-        }
-
-        public override string ToString()
-        {
+        public override string ToString() {
             return Server + "," + Database + "," + User;
         }
 
-        public ServerInfo Clone()
-        {
-            return new ServerInfo { IsAzure = this.IsAzure, Server = this.Server, AuthType = this.AuthType, Database = this.Database, User = this.User, Password = this.Password, IsEncrypted = this.IsEncrypted };
+        public ServerInfo Clone() {
+            return new ServerInfo {
+                IsAzure = IsAzure, Server = Server, AuthType = AuthType, Database = Database, User = User,
+                Password = Password, IsEncrypted = IsEncrypted
+            };
         }
     }
 
     [Serializable]
-    public class MonitorItem
-    {
+    public class MonitorItem {
+
+        public MonitorItem() {
+            IsEnabled = true;
+        }
+
         public string Server { get; set; }
         public AlertTypes AlertType { get; set; }
         public string Target { get; set; }
@@ -123,19 +119,12 @@ namespace Xnlab.SQLMon.Logic
         public string Title { get; set; }
         public bool IsEnabled { get; set; }
 
-        public MonitorItem()
-        {
-            IsEnabled = true;
-        }
-
-        public override string ToString()
-        {
+        public override string ToString() {
             return Server + ", " + AlertType + ", " + CondictionType + ", " + CondictionValue + ", " + Target;
         }
     }
 
-    public enum HealthTypes
-    {
+    public enum HealthTypes {
         ServerCpu = 0,
         ServerMemory = 1,
         ServerSpace = 2,
@@ -146,8 +135,7 @@ namespace Xnlab.SQLMon.Logic
     }
 
     [Serializable]
-    public class DatabaseStall
-    {
+    public class DatabaseStall {
         public string Database { get; set; }
         public long DbReadStall { get; set; }
         public long DbWriteStall { get; set; }
@@ -158,8 +146,7 @@ namespace Xnlab.SQLMon.Logic
     }
 
     [Serializable]
-    public class HealthItem
-    {
+    public class HealthItem {
         public string Category { get; set; }
         public HealthTypes HealthType { get; set; }
         public string ItemName { get; set; }
@@ -169,16 +156,14 @@ namespace Xnlab.SQLMon.Logic
         public bool IsAlert { get; set; }
     }
 
-    public enum RecentObjectTypes
-    {
+    public enum RecentObjectTypes {
         EditData = 0,
         FilePath = 1,
         Other = 2
     }
 
     [Serializable]
-    public class RecentObject
-    {
+    public class RecentObject {
         public RecentObjectTypes RecentObjectType { get; set; }
         public string Server { get; set; }
         public string User { get; set; }
@@ -188,22 +173,19 @@ namespace Xnlab.SQLMon.Logic
     }
 
     [Serializable]
-    public class NotifiedMonitorItem
-    {
+    public class NotifiedMonitorItem {
         public string Server { get; set; }
         public string CurrentValue { get; set; }
         public DateTime CreatedDate { get; set; }
     }
 
-    internal class ServerState : ServerInfo
-    {
+    internal class ServerState : ServerInfo {
         internal string Key { get; set; }
         internal bool IsReady { get; set; }
         internal bool State { get; set; }
     }
 
-    public enum ActivityStatuses
-    {
+    public enum ActivityStatuses {
         Running = 0,
         Sleeping = 1,
         Suspended = 2,
@@ -212,33 +194,54 @@ namespace Xnlab.SQLMon.Logic
         All = 5
     }
 
-    public enum AlertMethods
-    {
+    public enum AlertMethods {
         MsgBox = 0,
         Mail = 1,
-        Log = 2,
+        Log = 2
     }
 
     [Serializable]
-    public class SerializableFont
-    {
+    public class SerializableFont {
         public string Name { get; set; }
         public float Size { get; set; }
         public bool Bold { get; set; }
     }
 
     [Serializable]
-    public class Settings
-    {
+    public class Settings {
         public const string DefaultTemplate = "#Type# #Action# \r\n raised on #Server# at #Now#";
-        public List<ServerInfo> Servers = new List<ServerInfo>();
-        public List<NotifiedMonitorItem> NotifiedAlerts = new List<NotifiedMonitorItem>();
+
+        private static Settings _settings;
         public List<MonitorItem> MonitorItems = new List<MonitorItem>();
+        public List<NotifiedMonitorItem> NotifiedAlerts = new List<NotifiedMonitorItem>();
         public List<ServerInfoEx> PerformanceItems = new List<ServerInfoEx>();
+        public List<RecentObject> RecentObjects = new List<RecentObject>();
+        public List<string> SearchHistories = new List<string>();
+        public List<ServerInfo> Servers = new List<ServerInfo>();
+
+        public Settings() {
+            ActivityState = ActivityStatuses.All;
+            EditorFont = new SerializableFont {Name = "Tahoma", Size = 10, Bold = false};
+            ActivityType = ActivityTypes.Process;
+            VersionControlTableName = "SQLMonSystemObjectVersionControls";
+            VersionControlTriggerName = "trg_SQLMonSystemObjectVersionControls";
+            LastSearchIsObject = true;
+            MonitorRefreshInterval = 10;
+            PerformanceInterval = 5;
+            LogHistory = true;
+            AutoWordWrap = true;
+            ConnectionTimeout = 30;
+            DatabaseDiskFreeSpaceRatio = 30;
+            DatabaseDataLogSpaceRatio = 40;
+            TableDataIndexSpaceRatio = 100;
+            FreeMemoryRatio = 20;
+            FreeCpuRatio = 20;
+            IgnoredVersionUpdate = string.Empty;
+        }
+
         public ActivityStatuses ActivityState { get; set; }
         public string LastQuery { get; set; }
         public string LastServer { get; set; }
-        public List<string> SearchHistories = new List<string>();
         public string LastSearchContent { get; set; }
         public bool LastSearchIsCaseSenstive { get; set; }
         public bool LastSearchIsObject { get; set; }
@@ -261,111 +264,69 @@ namespace Xnlab.SQLMon.Logic
         public int DatabaseDiskFreeSpaceRatio { get; set; }
         public int DatabaseDataLogSpaceRatio { get; set; }
         public int TableDataIndexSpaceRatio { get; set; }
-        public List<RecentObject> RecentObjects = new List<RecentObject>();
         public int FreeMemoryRatio { get; set; }
         public int FreeCpuRatio { get; set; }
         public string IgnoredVersionUpdate { get; set; }
 
-        public Settings()
-        {
-            ActivityState = ActivityStatuses.All;
-            EditorFont = new SerializableFont { Name = "Tahoma", Size = 10, Bold = false };
-            ActivityType = ActivityTypes.Process;
-            VersionControlTableName = "SQLMonSystemObjectVersionControls";
-            VersionControlTriggerName = "trg_SQLMonSystemObjectVersionControls";
-            LastSearchIsObject = true;
-            MonitorRefreshInterval = 10;
-            PerformanceInterval = 5;
-            LogHistory = true;
-            AutoWordWrap = true;
-            ConnectionTimeout = 30;
-            DatabaseDiskFreeSpaceRatio = 30;
-            DatabaseDataLogSpaceRatio = 40;
-            TableDataIndexSpaceRatio = 100;
-            FreeMemoryRatio = 20;
-            FreeCpuRatio = 20;
-            IgnoredVersionUpdate = string.Empty;
+        public static string SettingsFile =>
+            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\SQLMon.cfg";
+
+        internal static string Title =>
+            (Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyTitleAttribute), false)[0] as
+                AssemblyTitleAttribute).Title;
+
+        public static Settings Instance {
+            get {
+                if (_settings == null) {
+                    _settings = new Settings();
+                    if (File.Exists(SettingsFile)) {
+                        var serializer = new XmlSerializer(typeof(Settings));
+                        using (var reader = File.OpenText(SettingsFile)) {
+                            _settings = (Settings) serializer.Deserialize(reader);
+
+                            _settings.Servers.ForEach(s => {
+                                if (s.IsEncrypted)
+                                    try {
+                                        s.Password = AES.Decrypt(s.Password);
+                                        s.IsEncrypted = false;
+                                    }
+                                    catch (Exception) {
+                                    }
+                            });
+                        }
+                    }
+                }
+
+                return _settings;
+            }
         }
 
-        private static Settings _settings = null;
-
-        public static string SettingsFile
-        {
-            get { return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\SQLMon.cfg"; }
-        }
-
-        internal static string Title
-        {
-            get { return ((Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyTitleAttribute), false)[0]) as AssemblyTitleAttribute).Title; }
-        }
-
-        internal void AddPerformanceItem(ServerInfo server, bool isServer)
-        {
+        internal void AddPerformanceItem(ServerInfo server, bool isServer) {
             if (FindPerformanceServer(server, isServer) == null)
-                PerformanceItems.Add(new ServerInfoEx { Database = server.Database, Server = server.Server, IsServer = isServer });
+                PerformanceItems.Add(new ServerInfoEx
+                    {Database = server.Database, Server = server.Server, IsServer = isServer});
         }
 
-        internal void RemovePerformanceItem(ServerInfo server, bool isServer)
-        {
+        internal void RemovePerformanceItem(ServerInfo server, bool isServer) {
             var item = FindPerformanceServer(server, isServer);
             if (item != null)
                 PerformanceItems.Remove(item);
         }
 
-        private ServerInfoEx FindPerformanceServer(ServerInfo server, bool isServer)
-        {
+        private ServerInfoEx FindPerformanceServer(ServerInfo server, bool isServer) {
             return PerformanceItems.FirstOrDefault(s => s.Server == server.Server
-                && s.Database == server.Database
-                && s.IsServer == isServer);
+                                                        && s.Database == server.Database
+                                                        && s.IsServer == isServer);
         }
 
-        public static Settings Instance
-        {
-            get
-            {
-                if (_settings == null)
-                {
-                    _settings = new Settings();
-                    if (File.Exists(SettingsFile))
-                    {
-                        var serializer = new XmlSerializer(typeof(Settings));
-                        using (var reader = File.OpenText(SettingsFile))
-                        {
-                            _settings = (Settings)serializer.Deserialize(reader);
-
-                            _settings.Servers.ForEach(s =>
-                                {
-                                    if (s.IsEncrypted)
-                                    {
-                                        try
-                                        {
-                                            s.Password = AES.Decrypt(s.Password);
-                                            s.IsEncrypted = false;
-                                        }
-                                        catch (Exception)
-                                        {
-                                        }
-                                    }
-                                });
-                        }
-                    }
-                }
-                return _settings;
-            }
-        }
-
-        public void Save()
-        {
+        public void Save() {
             if (File.Exists(SettingsFile))
                 File.Delete(SettingsFile);
             var serializer = new XmlSerializer(typeof(Settings));
             var settings = Utils.CloneObject(this);
-            using (var writer = File.OpenWrite(SettingsFile))
-            {
-                settings.Servers.ForEach(s =>
-                {
-                    if (!s.IsEncrypted)
-                    {
+            using (var writer = File.OpenWrite(SettingsFile)) {
+                settings.Servers.ForEach(s => {
+                    if (!s.IsEncrypted) {
                         s.Password = AES.Encrypt(s.Password);
                         s.IsEncrypted = true;
                     }
@@ -374,15 +335,13 @@ namespace Xnlab.SQLMon.Logic
             }
         }
 
-        public ServerInfo FindServer(string server)
-        {
-            return Servers.FirstOrDefault((s) => s.Server.ToLower() == server.ToLower());
+        public ServerInfo FindServer(string server) {
+            return Servers.FirstOrDefault(s => s.Server.ToLower() == server.ToLower());
         }
 
-        public ServerInfo FindServer(string server, string user)
-        {
-            return Servers.FirstOrDefault((s) => s.Server.ToLower() == server.ToLower()
-                    && s.User == user);
+        public ServerInfo FindServer(string server, string user) {
+            return Servers.FirstOrDefault(s => s.Server.ToLower() == server.ToLower()
+                                               && s.User == user);
         }
     }
 }

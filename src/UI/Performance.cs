@@ -10,47 +10,56 @@ using Xnlab.SQLMon.Logic;
 
 namespace Xnlab.SQLMon.UI
 {
-    public partial class Performance : UserControl
-    {
-        private ObjectModes _objectMode;
-        private ServerInfo _server;
+    public partial class Performance : UserControl {
+        private List<HistoryRecord> _currentRecords;
         private MonitorEngine _engine;
         private bool _isDocked = true;
-        private int _lastPointIndex = 0;
-        private List<HistoryRecord> _currentRecords = null;
-        private bool _isLoading = false;
+        private bool _isLoading;
+        private int _lastPointIndex;
 
-        public Performance()
-        {
+        public Performance() {
             InitializeComponent();
 
-            Enum.GetValues(typeof(DateTypes)).Cast<DateTypes>().ForEach((s) => cboPerformanceViewTypes.Items.Add(s));
+            Enum.GetValues(typeof(DateTypes)).Cast<DateTypes>().ForEach(s => cboPerformanceViewTypes.Items.Add(s));
             cboPerformanceViewTypes.SelectedItem = DateTypes.Day;
 
             dtpPerformanceStartDate.Value = DateTime.Now.Date;
         }
 
-        public void Init(ObjectModes objectMode, ServerInfo server)
-        {
+        private bool IsServer => ObjectMode == ObjectModes.Server;
+
+        internal string Title {
+            get {
+                var name = History.GetKey(Server, IsServer);
+                return "Performance (" + name + ")";
+            }
+        }
+
+        internal ObjectModes ObjectMode { get; private set; }
+
+        internal ServerInfo Server { get; private set; }
+
+        private bool HasData => chPerformance.Series.Count > 0 && chPerformance.Series[0].Points.Count > 0;
+
+        public void Init(ObjectModes objectMode, ServerInfo server) {
             _isLoading = true;
-            _objectMode = objectMode;
-            _server = server;
-            if (_server != null)
-                chkAutoPerformance.Checked = Settings.Instance.PerformanceItems.Exists(p => p.Server == _server.Server
-                    && p.Database == _server.Database && p.IsServer == IsServer);
+            ObjectMode = objectMode;
+            Server = server;
+            if (Server != null)
+                chkAutoPerformance.Checked = Settings.Instance.PerformanceItems.Exists(p => p.Server == Server.Server
+                                                                                            && p.Database ==
+                                                                                            Server.Database &&
+                                                                                            p.IsServer == IsServer);
             _isLoading = false;
             StartEngine();
         }
 
-        public void RemovePerformanceItem()
-        {
-            MonitorEngine.Instance.RemoveUserPerformanceItem(_server, IsServer);
+        public void RemovePerformanceItem() {
+            MonitorEngine.Instance.RemoveUserPerformanceItem(Server, IsServer);
         }
 
-        private void StartEngine()
-        {
-            if (_engine == null)
-            {
+        private void StartEngine() {
+            if (_engine == null) {
                 _engine = new MonitorEngine();
                 _engine.Message += OnMonitorEngineMessage;
                 _engine.RequestPerformanceServer += OnMonitorEngineRequestServer;
@@ -58,81 +67,45 @@ namespace Xnlab.SQLMon.UI
             }
         }
 
-        internal void ShowPopDock()
-        {
+        internal void ShowPopDock() {
             cmdPopDock.Visible = true;
         }
 
-        private bool IsServer
-        {
-            get { return _objectMode == ObjectModes.Server; }
-        }
-
-        internal string Title
-        {
-            get
-            {
-                var name = History.GetKey(_server, IsServer);
-                return "Performance (" + name + ")";
-            }
-        }
-
-        internal ObjectModes ObjectMode
-        {
-            get { return _objectMode; }
-        }
-
-        internal ServerInfo Server
-        {
-            get { return _server; }
-        }
-
-        private void OnPerformanceCursorPositionChanged(object sender, CursorEventArgs e)
-        {
-            if (chPerformance.Series.Count > 0 && _currentRecords.Count > 0)
-            {
+        private void OnPerformanceCursorPositionChanged(object sender, CursorEventArgs e) {
+            if (chPerformance.Series.Count > 0 && _currentRecords.Count > 0) {
                 var index = _currentRecords.FindIndex(p => p.Value16.ToOADate() >= e.NewPosition);
-                if (_lastPointIndex != index && index >= 0)
-                {
+                if (_lastPointIndex != index && index >= 0) {
                     _lastPointIndex = index;
                     SetPerformanceInfo();
                 }
+
                 Debug.WriteLine(e.NewPosition);
             }
         }
 
-        private void OnMonitorEngineRequestServer(object sender, ServerInfoEventArgs e)
-        {
-            e.IsServer = _objectMode == ObjectModes.Server;
-            e.Server = _server;
-            e.Cancel = _server == null;
+        private void OnMonitorEngineRequestServer(object sender, ServerInfoEventArgs e) {
+            e.IsServer = ObjectMode == ObjectModes.Server;
+            e.Server = Server;
+            e.Cancel = Server == null;
         }
 
-        internal void SetInterval(string interval)
-        {
+        internal void SetInterval(string interval) {
             StartEngine();
             _engine.SetPerformanceInterval(interval);
         }
 
-        private void OnMonitorEngineMessage(object sender, MessageEventArgs e)
-        {
-            this.Invoke(() =>
-            {
-                if (e.Cancel)
-                {
-                    _engine.DisablePerformance();
-                }
+        private void OnMonitorEngineMessage(object sender, MessageEventArgs e) {
+            this.Invoke(() => {
+                if (e.Cancel) _engine.DisablePerformance();
                 Monitor.Instance.ShowMessage(e.Message);
             });
         }
 
-        internal void ResetPerformance()
-        {
+        internal void ResetPerformance() {
             ResetPerformance(true);
         }
 
-        private void ResetPerformance(bool isNew)
-        {
+        private void ResetPerformance(bool isNew) {
             chPerformance.Series.Clear();
             ResetPerformanceIo();
             txtPerformanceIO.Text = string.Empty;
@@ -141,8 +114,7 @@ namespace Xnlab.SQLMon.UI
             txtPerformanceWrite.Text = string.Empty;
             txtPerformancePackets.Text = string.Empty;
             txtPerformanceConnections.Text = string.Empty;
-            if (_objectMode == ObjectModes.Databases)
-            {
+            if (ObjectMode == ObjectModes.Databases) {
                 llPerformanceIO.Text = "Stall";
                 lblPerformanceCPU.Text = "Since";
                 ttInfo.SetToolTip(txtPerformanceCPU, "Calculation since last startup");
@@ -155,36 +127,37 @@ namespace Xnlab.SQLMon.UI
                 lblPerformanceConnection.Text = "Log write";
                 ttInfo.SetToolTip(txtPerformanceConnections, "Number of writes / Total writes");
             }
-            else if (_objectMode == ObjectModes.Server)
-            {
+            else if (ObjectMode == ObjectModes.Server) {
                 llPerformanceIO.Text = "IO";
                 ttInfo.SetToolTip(txtPerformanceIO, "Total IO time / Current IO %");
                 lblPerformanceCPU.Text = "CPU";
                 ttInfo.SetToolTip(txtPerformanceCPU, "Total CPU time / Current CPU %");
                 lblPerformanceRead.Text = "Read";
-                ttInfo.SetToolTip(txtPerformanceRead, "Total number of reads since last startup/ Recent number of reads");
+                ttInfo.SetToolTip(txtPerformanceRead,
+                    "Total number of reads since last startup/ Recent number of reads");
                 lblPerformanceWrite.Text = "Write";
-                ttInfo.SetToolTip(txtPerformanceWrite, "Total number of writes since last startup/ Recent number of writes");
+                ttInfo.SetToolTip(txtPerformanceWrite,
+                    "Total number of writes since last startup/ Recent number of writes");
                 lblPerformancePacket.Text = "Packet";
-                ttInfo.SetToolTip(txtPerformancePackets, "Total number of packets received / Total number of packets sent");
+                ttInfo.SetToolTip(txtPerformancePackets,
+                    "Total number of packets received / Total number of packets sent");
                 lblPerformanceConnection.Text = "Connection";
                 ttInfo.SetToolTip(txtPerformanceConnections, "Total connection count / Recent connection count");
             }
+
             if (isNew)
                 chkShowPerformanceHistory.Checked = false;
             _lastPointIndex = 0;
             _currentRecords = new List<HistoryRecord>();
         }
 
-        private void ResetPerformanceIo()
-        {
+        private void ResetPerformanceIo() {
             txtPerformanceIO.BackColor = SystemColors.Control;
             ttInfo.SetToolTip(txtPerformanceIO, "DB stall / Log stall");
             llPerformanceIO.Enabled = false;
         }
 
-        private Series AddPerformanceSerie(string name, Color color)
-        {
+        private Series AddPerformanceSerie(string name, Color color) {
             var serie = new Series(name);
             serie.ChartArea = "Default";
             serie.BorderWidth = 1;
@@ -197,8 +170,7 @@ namespace Xnlab.SQLMon.UI
             return serie;
         }
 
-        private void AddPerformanceValue(DateTime timeStamp, Series serie, long value)
-        {
+        private void AddPerformanceValue(DateTime timeStamp, Series serie, long value) {
             var current = timeStamp.ToOADate();
 
             if (current < chPerformance.ChartAreas[0].AxisX.Minimum)
@@ -207,24 +179,19 @@ namespace Xnlab.SQLMon.UI
             serie.Points.AddXY(current, value);
             //Serie.Points[Serie.Points.Count - 1].LabelFormat = "HH:MM:SS";
 
-            if (!chkShowPerformanceHistory.Checked)
-            {
+            if (!chkShowPerformanceHistory.Checked) {
                 var removeBefore = timeStamp.AddSeconds(-60).ToOADate();
-                while (serie.Points[0].XValue < removeBefore)
-                {
-                    serie.Points.RemoveAt(0);
-                }
+                while (serie.Points[0].XValue < removeBefore) serie.Points.RemoveAt(0);
                 chPerformance.ChartAreas[0].AxisX.Minimum = serie.Points[0].XValue;
-                chPerformance.ChartAreas[0].AxisX.Maximum = DateTime.FromOADate(serie.Points[0].XValue).AddMinutes(1).ToOADate();
+                chPerformance.ChartAreas[0].AxisX.Maximum =
+                    DateTime.FromOADate(serie.Points[0].XValue).AddMinutes(1).ToOADate();
             }
 
             chPerformance.Invalidate();
         }
 
-        private void AddPerformanceHistoryRecord(PerformanceRecord record, DateTime date, DateTime min, DateTime max)
-        {
-            if (_objectMode == ObjectModes.Server)
-            {
+        private void AddPerformanceHistoryRecord(PerformanceRecord record, DateTime date, DateTime min, DateTime max) {
+            if (ObjectMode == ObjectModes.Server) {
                 var cpuBusyCurrent = record.Value1;
                 var ioBusyCurrent = record.Value2;
                 var currentRead = record.Value3;
@@ -239,8 +206,7 @@ namespace Xnlab.SQLMon.UI
                 Series packetsSent;
                 Series packetsReceived;
                 Series connections;
-                if (chPerformance.Series.Count == 0)
-                {
+                if (chPerformance.Series.Count == 0) {
                     chPerformance.ChartAreas[0].AxisX.Minimum = min.ToOADate();
                     chPerformance.ChartAreas[0].AxisX.Maximum = max.ToOADate();
 
@@ -252,8 +218,7 @@ namespace Xnlab.SQLMon.UI
                     packetsSent = AddPerformanceSerie("Packet Sent", Color.Pink);
                     connections = AddPerformanceSerie("Connections", Color.Yellow);
                 }
-                else
-                {
+                else {
                     cpu = chPerformance.Series[0];
                     io = chPerformance.Series[1];
                     read = chPerformance.Series[2];
@@ -262,6 +227,7 @@ namespace Xnlab.SQLMon.UI
                     packetsSent = chPerformance.Series[5];
                     connections = chPerformance.Series[6];
                 }
+
                 AddPerformanceValue(date, cpu, cpuBusyCurrent);
                 AddPerformanceValue(date, io, ioBusyCurrent);
                 AddPerformanceValue(date, read, currentRead);
@@ -270,8 +236,7 @@ namespace Xnlab.SQLMon.UI
                 AddPerformanceValue(date, packetsSent, packetsSentCurrent);
                 AddPerformanceValue(date, connections, connectionsCurrent);
             }
-            else
-            {
+            else {
                 var dbCurrentNumberReads = record.Value5;
                 var dbCurrentNumberWrites = record.Value6;
 
@@ -282,8 +247,7 @@ namespace Xnlab.SQLMon.UI
                 Series dbWrites;
                 Series logReads;
                 Series logWrites;
-                if (chPerformance.Series.Count == 0)
-                {
+                if (chPerformance.Series.Count == 0) {
                     chPerformance.ChartAreas[0].AxisX.Minimum = min.ToOADate();
                     chPerformance.ChartAreas[0].AxisX.Maximum = max.ToOADate();
 
@@ -292,13 +256,13 @@ namespace Xnlab.SQLMon.UI
                     logReads = AddPerformanceSerie("Log Read", Color.Green);
                     logWrites = AddPerformanceSerie("Log Write", Color.Blue);
                 }
-                else
-                {
+                else {
                     dbReads = chPerformance.Series[0];
                     dbWrites = chPerformance.Series[1];
                     logReads = chPerformance.Series[2];
                     logWrites = chPerformance.Series[3];
                 }
+
                 AddPerformanceValue(date, dbReads, dbCurrentNumberReads);
                 AddPerformanceValue(date, dbWrites, dbCurrentNumberWrites);
                 AddPerformanceValue(date, logReads, logCurrentNumberReads);
@@ -306,38 +270,28 @@ namespace Xnlab.SQLMon.UI
             }
         }
 
-        private void OnMonitorUpdateServerInfo(object sender, PerformanceRecordEventArgs e)
-        {
-            if (this.IsHandleCreated && !this.IsDisposed)
-            {
-                this.BeginInvoke((MethodInvoker)delegate()
-                {
+        private void OnMonitorUpdateServerInfo(object sender, PerformanceRecordEventArgs e) {
+            if (IsHandleCreated && !IsDisposed)
+                BeginInvoke((MethodInvoker) delegate {
                     if (!chkShowPerformanceHistory.Checked)
-                    {
-                        try
-                        {
+                        try {
                             var record = e.Data;
                             var now = DateTime.Now;
-                            var historyRecord = new HistoryRecord(record) { Date = now.ToString(), Value16 = now };
+                            var historyRecord = new HistoryRecord(record) {Date = now.ToString(), Value16 = now};
                             _currentRecords.Add(historyRecord);
                             AddPerformanceHistoryRecord(record, now, now, now.AddMinutes(1));
                             SetPerformanceInfo(record);
                         }
-                        catch (Exception ex)
-                        {
+                        catch (Exception ex) {
                             _engine.DisablePerformance();
                             Monitor.Instance.ShowMessage(ex.Message);
                         }
-                    }
                 });
-            }
         }
 
-        private void SetPerformanceInfo(PerformanceRecord record)
-        {
+        private void SetPerformanceInfo(PerformanceRecord record) {
             _isLoading = true;
-            if (_objectMode == ObjectModes.Server)
-            {
+            if (ObjectMode == ObjectModes.Server) {
                 var cpuBusyCurrent = record.Value1;
                 var ioBusyCurrent = record.Value2;
                 var currentRead = record.Value3;
@@ -362,8 +316,7 @@ namespace Xnlab.SQLMon.UI
                 var connectionsTotal = record.Value14;
                 txtPerformanceConnections.Text = string.Format("{0} / {1}", connectionsTotal, connectionsCurrent);
             }
-            else
-            {
+            else {
                 var dbIsStall = record.Value13;
                 var dbNumberReads = record.Value1;
                 var dbBytesRead = record.Value2;
@@ -382,60 +335,57 @@ namespace Xnlab.SQLMon.UI
                 txtPerformanceIO.Text = string.Format("{0} / {1}", dbIsStall, logIsStall);
                 ResetPerformanceIo();
                 if (dbIsStall >= QueryEngine.DbStallThreshold
-                    || logIsStall >= QueryEngine.DbStallThreshold)
-                {
+                    || logIsStall >= QueryEngine.DbStallThreshold) {
                     txtPerformanceIO.BackColor = Color.Red;
-                    ttInfo.SetToolTip(txtPerformanceIO, "Potential performance bottleneck due to hard disk IO delay, check using database analysis.");
+                    ttInfo.SetToolTip(txtPerformanceIO,
+                        "Potential performance bottleneck due to hard disk IO delay, check using database analysis.");
                     llPerformanceIO.Enabled = true;
                 }
+
                 txtPerformanceRead.Text = string.Format("{0} / {1}", dbNumberReads, Utils.FormatSize(dbBytesRead));
                 txtPerformanceWrite.Text = string.Format("{0} / {1}", dbNumberWrites, Utils.FormatSize(dbBytesWritten));
                 txtPerformancePackets.Text = string.Format("{0} / {1}", logNumberReads, Utils.FormatSize(logBytesRead));
-                txtPerformanceConnections.Text = string.Format("{0} / {1}", logNumberWrites, Utils.FormatSize(logBytesWritten));
+                txtPerformanceConnections.Text =
+                    string.Format("{0} / {1}", logNumberWrites, Utils.FormatSize(logBytesWritten));
             }
+
             if (record.Value16 > DateTime.MinValue)
                 dtpPerformanceStartDate.Value = record.Value16;
             _isLoading = false;
         }
 
-        private void OnPerformanceIoLinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
+        private void OnPerformanceIoLinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
             Monitor.Instance.ShowAnalysis(AnalysisTypes.Performance);
         }
 
-        internal void GetPerformanceData()
-        {
+        internal void GetPerformanceData() {
             _engine.CheckPerformance();
         }
 
-        private void OnPopDockClick(object sender, EventArgs e)
-        {
+        private void OnPopDockClick(object sender, EventArgs e) {
             SetPopDock();
         }
 
-        internal void SetPopDock()
-        {
-            if (_isDocked)
-            {
-                var dlg = new PerformanceDialog { Name = Title, Text = Title };
+        internal void SetPopDock() {
+            if (_isDocked) {
+                var dlg = new PerformanceDialog {Name = Title, Text = Title};
                 dlg.Controls.Add(this);
                 dlg.Show();
                 Monitor.Instance.RemoveCurrentTab();
                 cmdPopDock.Text = "Dock";
                 dlg.BringToFront();
             }
-            else
-            {
-                var parent = this.Parent as PerformanceDialog;
+            else {
+                var parent = Parent as PerformanceDialog;
                 Monitor.Instance.AddPerformance(this);
                 parent.Close();
                 cmdPopDock.Text = "Popup";
             }
+
             _isDocked = !_isDocked;
         }
 
-        private void OnShowPerformanceHistoryCheckedChanged(object sender, EventArgs e)
-        {
+        private void OnShowPerformanceHistoryCheckedChanged(object sender, EventArgs e) {
             var isChecked = chkShowPerformanceHistory.Checked;
             ResetPerformance(false);
             cboPerformanceViewTypes.Enabled = isChecked;
@@ -443,8 +393,7 @@ namespace Xnlab.SQLMon.UI
             cmdPerformancePrevious.Enabled = isChecked;
             cmdPerformanceNext.Enabled = isChecked;
             var area = chPerformance.ChartAreas[0];
-            if (isChecked)
-            {
+            if (isChecked) {
                 area.AxisX.MajorGrid.Enabled = false;
                 area.AxisX.LabelStyle.Enabled = false;
                 area.CursorX.AxisType = AxisType.Primary;
@@ -452,8 +401,7 @@ namespace Xnlab.SQLMon.UI
                 //pnlCurrentPoint.Visible = true;
                 ShowHistory();
             }
-            else
-            {
+            else {
                 area.AxisX.MajorGrid.Enabled = true;
                 area.AxisX.LabelStyle.Enabled = true;
                 area.InnerPlotPosition.Auto = false;
@@ -461,50 +409,42 @@ namespace Xnlab.SQLMon.UI
             }
         }
 
-        private void OnAutoPerformanceCheckedChanged(object sender, EventArgs e)
-        {
-            if (!_isLoading)
-            {
+        private void OnAutoPerformanceCheckedChanged(object sender, EventArgs e) {
+            if (!_isLoading) {
                 if (chkAutoPerformance.Checked)
-                    Settings.Instance.AddPerformanceItem(_server, IsServer);
+                    Settings.Instance.AddPerformanceItem(Server, IsServer);
                 else
-                    Settings.Instance.RemovePerformanceItem(_server, IsServer);
+                    Settings.Instance.RemovePerformanceItem(Server, IsServer);
             }
         }
 
-        private void ShowHistory()
-        {
-            if (_server != null)
-            {
+        private void ShowHistory() {
+            if (Server != null) {
                 ResetPerformance(false);
-                _currentRecords = History.GetRecords(_server, IsServer, (DateTypes)cboPerformanceViewTypes.SelectedItem, dtpPerformanceStartDate.Value);
+                _currentRecords = History.GetRecords(Server, IsServer, (DateTypes) cboPerformanceViewTypes.SelectedItem,
+                    dtpPerformanceStartDate.Value);
                 Debug.WriteLine("count:" + _currentRecords.Count);
-                if (_currentRecords.Count > 0)
-                {
+                if (_currentRecords.Count > 0) {
                     var min = _currentRecords.Min(r => Convert.ToDateTime(r.Date));
                     var max = _currentRecords.Max(r => Convert.ToDateTime(r.Date));
-                    _currentRecords.ForEach(r =>
-                        {
-                            r.Value16 = Convert.ToDateTime(r.Date);
-                            AddPerformanceHistoryRecord(r, r.Value16, min, max);
-                        });
+                    _currentRecords.ForEach(r => {
+                        r.Value16 = Convert.ToDateTime(r.Date);
+                        AddPerformanceHistoryRecord(r, r.Value16, min, max);
+                    });
                 }
             }
         }
 
-        private void OnPerformanceStartDateValueChanged(object sender, EventArgs e)
-        {
+        private void OnPerformanceStartDateValueChanged(object sender, EventArgs e) {
             if (!_isLoading)
                 ShowHistory();
         }
 
-        private void OnPerformancePreviousClick(object sender, EventArgs e)
-        {
+        private void OnPerformancePreviousClick(object sender, EventArgs e) {
             MoveLeft();
         }
 
-        private void MoveLeft()
-        {
+        private void MoveLeft() {
             dtpPerformanceStartDate.Value = dtpPerformanceStartDate.Value.AddDays(-1);
             //if (HasData && lastPointIndex > 0)
             //{
@@ -513,13 +453,11 @@ namespace Xnlab.SQLMon.UI
             //}
         }
 
-        private void OnPerformanceNextClick(object sender, EventArgs e)
-        {
+        private void OnPerformanceNextClick(object sender, EventArgs e) {
             MoveRight();
         }
 
-        private void MoveRight()
-        {
+        private void MoveRight() {
             dtpPerformanceStartDate.Value = dtpPerformanceStartDate.Value.AddDays(1);
             //if (HasData && lastPointIndex < chPerformance.Series[0].Points.Count - 1)
             //{
@@ -528,34 +466,25 @@ namespace Xnlab.SQLMon.UI
             //}
         }
 
-        private void SetPerformanceInfo()
-        {
+        private void SetPerformanceInfo() {
             if (_lastPointIndex < _currentRecords.Count)
                 SetPerformanceInfo(_currentRecords[_lastPointIndex]);
         }
 
-        private void OnPerformanceMouseDown(object sender, MouseEventArgs e)
-        {
+        private void OnPerformanceMouseDown(object sender, MouseEventArgs e) {
             //isMouseMoving = true;
         }
 
-        private void OnPerformanceMouseUp(object sender, MouseEventArgs e)
-        {
+        private void OnPerformanceMouseUp(object sender, MouseEventArgs e) {
             //isMouseMoving = false;
             //SetPerformanceInfo(e);
         }
 
-        private void OnPerformanceMouseMove(object sender, MouseEventArgs e)
-        {
+        private void OnPerformanceMouseMove(object sender, MouseEventArgs e) {
             //if (isMouseMoving)
             //{
             //    SetPerformanceInfo(e);
             //}
-        }
-
-        private bool HasData
-        {
-            get { return chPerformance.Series.Count > 0 && chPerformance.Series[0].Points.Count > 0; }
         }
 
         //private void SetPerformanceInfo(MouseEventArgs e)
@@ -574,35 +503,28 @@ namespace Xnlab.SQLMon.UI
         //    }
         //}
 
-        private void OnPerformanceMouseLeave(object sender, EventArgs e)
-        {
+        private void OnPerformanceMouseLeave(object sender, EventArgs e) {
             //isMouseMoving = false;
         }
 
-        private void OnPerformanceKeyDown(object sender, KeyEventArgs e)
-        {
-            switch (e.KeyCode)
-            {
+        private void OnPerformanceKeyDown(object sender, KeyEventArgs e) {
+            switch (e.KeyCode) {
                 case Keys.Left:
                     MoveLeft();
                     break;
+
                 case Keys.Right:
                     MoveRight();
-                    break;
-                default:
                     break;
             }
         }
 
-        private void OnPerformanceViewTypesSelectedIndexChanged(object sender, EventArgs e)
-        {
+        private void OnPerformanceViewTypesSelectedIndexChanged(object sender, EventArgs e) {
             ShowHistory();
         }
 
-        private void OnKeyDown(object sender, KeyEventArgs e)
-        {
+        private void OnKeyDown(object sender, KeyEventArgs e) {
             Debug.WriteLine(e.KeyCode);
         }
-
     }
 }

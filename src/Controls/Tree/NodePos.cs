@@ -1,4 +1,5 @@
 #region Copyright ?2007 Rotem Sapir
+
 /*
  * This software is provided 'as-is', without any express or implied warranty.
  * In no event will the authors be held liable for any damages arising from the
@@ -17,33 +18,16 @@
  * without the express written permission of the copyright holders, where
  * "substantial" is defined as enough code to be recognizably from this library.
 */
-#endregion
+
+#endregion Copyright ?2007 Rotem Sapir
 
 using System.Drawing;
 
 namespace Xnlab.SQLMon.Controls.Tree
 {
-    public class NodePos
-    {
-        public NodePos()
-        {
-            //throw new System.NotImplementedException();
-        }
-        private string _nodeId;
+    public class NodePos {
+        public string NodeId { get; set; }
 
-        public string NodeId
-        {
-            get { return _nodeId; }
-            set { _nodeId = value; }
-        }
-        private RectangleF _nodePosition;
-
-        public RectangleF NodePosition
-        {
-            get { return _nodePosition; }
-            set { _nodePosition = value; }
-        }
-        
-        
+        public RectangleF NodePosition { get; set; }
     }
 }

@@ -1,7 +1,7 @@
 ﻿namespace Xnlab.SQLMon.Logic
 {
-    interface ICancelable
-    {
+    internal interface ICancelable {
+
         void Cancel();
     }
 }

@@ -5,72 +5,58 @@ using System.Linq;
 
 namespace Xnlab.SQLMon.Diff
 {
-	public class TextLine : IComparable
-	{
-		public string Line;
-		public int Hash;
+    public class TextLine : IComparable {
+        public int Hash;
+        public string Line;
 
-		public TextLine(string str)
-		{
-			Line = str.Replace("\t","    ");
-			Hash = str.GetHashCode();
-		}
-		#region IComparable Members
+        public TextLine(string str) {
+            Line = str.Replace("\t", "    ");
+            Hash = str.GetHashCode();
+        }
 
-		public int CompareTo(object obj)
-		{
-			return Hash.CompareTo(((TextLine)obj).Hash);
-		}
+        #region IComparable Members
 
-		#endregion
-	}
+        public int CompareTo(object obj) {
+            return Hash.CompareTo(((TextLine) obj).Hash);
+        }
 
+        #endregion IComparable Members
+    }
 
-	public class DiffListText : IDiffList
-	{
-		private const int MaxLineLength = 1024;
-		private readonly List<TextLine> _lines;
+    public class DiffListText : IDiffList {
+        private const int MaxLineLength = 1024;
+        private readonly List<TextLine> _lines;
 
-		public DiffListText(string source, bool isFile)
-		{
+        public DiffListText(string source, bool isFile) {
             _lines = new List<TextLine>();
             if (isFile)
-            {
-                using (var sr = new StreamReader(source))
-                {
-                    String line;
-                    // Read and display lines from the file until the end of 
+                using (var sr = new StreamReader(source)) {
+                    string line;
+                    // Read and display lines from the file until the end of
                     // the file is reached.
-                    while ((line = sr.ReadLine()) != null)
-                    {
+                    while ((line = sr.ReadLine()) != null) {
                         if (line.Length > MaxLineLength)
-                        {
                             throw new InvalidOperationException(
                                 string.Format("File contains a line greater than {0} characters.",
-                                MaxLineLength.ToString()));
-                        }
+                                    MaxLineLength.ToString()));
                         _lines.Add(new TextLine(line));
                     }
                 }
-            }
             else
-            {
-                source.Split(new string[] { "\r\n" }, StringSplitOptions.None).ToList().ForEach(l => _lines.Add(new TextLine(l)));
-            }
-		}
-		#region IDiffList Members
+                source.Split(new[] {"\r\n"}, StringSplitOptions.None).ToList()
+                    .ForEach(l => _lines.Add(new TextLine(l)));
+        }
 
-		public int Count()
-		{
-			return _lines.Count;
-		}
+        #region IDiffList Members
 
-		public IComparable GetByIndex(int index)
-		{
-			return (TextLine)_lines[index];
-		}
+        public int Count() {
+            return _lines.Count;
+        }
 
-		#endregion
-	
-	}
+        public IComparable GetByIndex(int index) {
+            return _lines[index];
+        }
+
+        #endregion IDiffList Members
+    }
 }

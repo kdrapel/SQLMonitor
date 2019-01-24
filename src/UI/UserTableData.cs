@@ -8,23 +8,19 @@ using Xnlab.SQLMon.Logic;
 
 namespace Xnlab.SQLMon.UI
 {
-    public partial class UserTableData : UserControl, ICancelable
-    {
-        private readonly string _table;
+    public partial class UserTableData : UserControl, ICancelable {
         private readonly ServerInfo _server;
-        private bool _isRunning = false;
-        private Thread _thread = null;
-        private bool _hasPrimaryKey = false;
-        private string _primaryKey = null;
+        private readonly string _table;
+        private bool _hasPrimaryKey;
+        private string _primaryKey;
+        private Thread _thread;
 
-        public UserTableData()
-        {
+        public UserTableData() {
             InitializeComponent();
         }
 
         public UserTableData(ServerInfo server, string table)
-            : this()
-        {
+            : this() {
             rtbSQL.Font = Monitor.Instance.SetFont();
             _server = server;
             _table = table;
@@ -34,124 +30,96 @@ namespace Xnlab.SQLMon.UI
             Execute();
         }
 
-        ~UserTableData()
-        {
+        public bool IsRunning { get; private set; }
+
+        public string Key => _server.Server + "." + _server.Database + "." + _table;
+
+        public void Cancel() {
+            try {
+                if (IsRunning && _thread != null)
+                    _thread.Abort();
+                IsRunning = false;
+            }
+            catch (Exception) {
+            }
+        }
+
+        ~UserTableData() {
             Cancel();
         }
 
-        public void Cancel()
-        {
-            try
-            {
-                if (_isRunning && _thread != null)
-                    _thread.Abort();
-                _isRunning = false;
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        public bool IsRunning
-        {
-            get { return _isRunning; }
-        }
-
-        private void SetCommand(bool cancel)
-        {
-            _isRunning = cancel;
+        private void SetCommand(bool cancel) {
+            IsRunning = cancel;
             Monitor.Instance.SetExecute(cancel);
         }
 
-        public string Key
-        {
-            get { return _server.Server + "." + _server.Database + "." + _table; }
-        }
-
-        public void Execute()
-        {
-            if (!_isRunning)
-            {
-                using (new DisposableState(this, Monitor.Instance.Commands))
-                {
+        public void Execute() {
+            if (!IsRunning) {
+                using (new DisposableState(this, Monitor.Instance.Commands)) {
                     _thread = new Thread(StartQuery);
                     _thread.Start(rtbSQL.Text);
                 }
             }
-            else
-            {
+            else {
                 if (_thread != null)
                     _thread.Abort();
-                _isRunning = false;
+                IsRunning = false;
                 SetCommand(false);
             }
         }
 
-        private void StartQuery(object state)
-        {
-            try
-            {
+        private void StartQuery(object state) {
+            try {
                 SetCommand(true);
-                var data = SqlHelper.Query((string)state, Monitor.Instance.CurrentServerInfo);
+                var data = SqlHelper.Query((string) state, Monitor.Instance.CurrentServerInfo);
                 if (data != null)
                     data.TableName = _table;
 
                 string schemaName;
                 var tableName = QueryEngine.ParseObjectName(_table, out schemaName);
                 var sql = string.Format(@"SELECT  COL_NAME(ic.OBJECT_ID,ic.column_id)
-FROM    sys.indexes AS i INNER JOIN 
+FROM    sys.indexes AS i INNER JOIN
         sys.index_columns AS ic ON  i.OBJECT_ID = ic.OBJECT_ID
                                 AND i.index_id = ic.index_id
 WHERE OBJECT_NAME(ic.OBJECT_ID) = '{0}' AND i.is_primary_key = 1", tableName);
                 var result = SqlHelper.ExecuteScalar(sql, Monitor.Instance.CurrentServerInfo);
                 _primaryKey = result != DBNull.Value ? Convert.ToString(result) : string.Empty;
                 _hasPrimaryKey = !string.IsNullOrEmpty(_primaryKey);
-                this.Invoke(() =>
-                    {
-                        dgvData.DataSource = data;
-                        dgvData.ReadOnly = !_hasPrimaryKey;
-                    });
+                this.Invoke(() => {
+                    dgvData.DataSource = data;
+                    dgvData.ReadOnly = !_hasPrimaryKey;
+                });
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 ShowMessage(ex is ThreadAbortException ? "Query cancelled." : ex.Message);
             }
-            finally
-            {
+            finally {
                 SetCommand(false);
             }
         }
 
-        private void OnDataGridRowLeave(object sender, DataGridViewCellEventArgs e)
-        {
-            if (_hasPrimaryKey)
-            {
+        private void OnDataGridRowLeave(object sender, DataGridViewCellEventArgs e) {
+            if (_hasPrimaryKey) {
                 var data = dgvData.DataSource as DataTable;
                 if (data != null)
                     UpdateQueryData(data);
             }
         }
 
-        private void StartUpdate(DataTable UserData)
-        {
-            try
-            {
+        private void StartUpdate(DataTable UserData) {
+            try {
                 SetCommand(true);
                 //dgvData.AllowUserToAddRows = false;
-                var userData = (DataTable)UserData;
+                var userData = UserData;
                 userData = userData.GetChanges();
                 if (userData != null)
-                {
-                    using (var connection = SqlHelper.CreateNewConnection(Monitor.Instance.CurrentServerInfo))
-                    {
+                    using (var connection = SqlHelper.CreateNewConnection(Monitor.Instance.CurrentServerInfo)) {
                         connection.Open();
-                        using (var transaction = connection.BeginTransaction())
-                        {
+                        using (var transaction = connection.BeginTransaction()) {
                             string schemaName;
                             var tableName = QueryEngine.ParseObjectName(userData.TableName, out schemaName);
                             tableName = QueryEngine.GetObjectName(schemaName, tableName);
-                            using (var command = new SqlCommand("SELECT TOP 1 * FROM " + tableName, connection))
-                            {
+                            using (var command = new SqlCommand("SELECT TOP 1 * FROM " + tableName, connection)) {
                                 command.Transaction = transaction;
                                 var adapter = new SqlDataAdapter(command);
                                 var builder = new SqlCommandBuilder(adapter);
@@ -171,38 +139,30 @@ WHERE OBJECT_NAME(ic.OBJECT_ID) = '{0}' AND i.is_primary_key = 1", tableName);
                                 adapter.Update(userData);
                                 UserData.AcceptChanges();
                             }
+
                             transaction.Commit();
                         }
+
                         connection.Close();
                     }
-                }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 ShowMessage(ex.Message);
             }
-            finally
-            {
+            finally {
                 SetCommand(false);
                 //dgvData.AllowUserToAddRows = true;
             }
         }
 
-        private void ShowMessage(string message)
-        {
-            this.Invoke(() =>
-                {
-                    Monitor.Instance.ShowMessage(message);
-                });
+        private void ShowMessage(string message) {
+            this.Invoke(() => { Monitor.Instance.ShowMessage(message); });
         }
 
-        private void UpdateQueryData(DataTable userData)
-        {
-            using (new DisposableState(this, Monitor.Instance.Commands))
-            {
+        private void UpdateQueryData(DataTable userData) {
+            using (new DisposableState(this, Monitor.Instance.Commands)) {
                 StartUpdate(userData);
             }
         }
-
     }
 }

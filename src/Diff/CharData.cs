@@ -2,26 +2,23 @@ using System;
 
 namespace Xnlab.SQLMon.Diff
 {
-	public class DiffListCharData : IDiffList
-	{
-		private readonly char[] _charList;
+    public class DiffListCharData : IDiffList {
+        private readonly char[] _charList;
 
-		public DiffListCharData(string charData)
-		{
-			_charList = charData.ToCharArray();
-		}
-		#region IDiffList Members
+        public DiffListCharData(string charData) {
+            _charList = charData.ToCharArray();
+        }
 
-		public int Count()
-		{
-			return _charList.Length;
-		}
+        #region IDiffList Members
 
-		public IComparable GetByIndex(int index)
-		{
-			return _charList[index];
-		}
+        public int Count() {
+            return _charList.Length;
+        }
 
-		#endregion
-	}
+        public IComparable GetByIndex(int index) {
+            return _charList[index];
+        }
+
+        #endregion IDiffList Members
+    }
 }

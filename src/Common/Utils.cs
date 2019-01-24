@@ -1,15 +1,14 @@
-﻿using System;
+﻿using ICSharpCode.TextEditor;
+using ICSharpCode.TextEditor.Document;
+using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Forms;
-using ICSharpCode.TextEditor;
-using ICSharpCode.TextEditor.Document;
 
 namespace Xnlab.SQLMon.Common
 {
-    public enum ObjectModes
-    {
+    public enum ObjectModes {
         None,
         Databases,
         Objects,
@@ -24,8 +23,7 @@ namespace Xnlab.SQLMon.Common
         Index
     }
 
-    internal enum WorkModes
-    {
+    internal enum WorkModes {
         Summary = 0,
         Objects = 1,
         Activities = 2,
@@ -39,8 +37,7 @@ namespace Xnlab.SQLMon.Common
         UserPerformance = 10
     }
 
-    class Utils
-    {
+    internal class Utils {
         internal const int EmptyIndex = -1;
         internal const string FileExtenionSql = ".sql";
         internal const string SizeKb = "KB";
@@ -52,58 +49,61 @@ namespace Xnlab.SQLMon.Common
         internal const string MultiCommentEnd = "*/";
         internal const string SingleCommentStart = "--";
 
-        internal static T CloneObject<T>(T objectInstance)
-        {
+        internal static T CloneObject<T>(T objectInstance) {
             var bFormatter = new BinaryFormatter();
             var stream = new MemoryStream();
             bFormatter.Serialize(stream, objectInstance);
             stream.Seek(0, SeekOrigin.Begin);
-            return (T)bFormatter.Deserialize(stream);
+            return (T) bFormatter.Deserialize(stream);
         }
 
-        internal static void SetDragDropContent(TextBox editor, DragEventArgs e)
-        {
+        internal static void SetDragDropContent(TextBox editor, DragEventArgs e) {
             var result = GetDragDropContent(e);
-            if (!string.IsNullOrEmpty(result))
+            if (!string.IsNullOrEmpty(result)) {
                 editor.Text = result;
+            }
         }
 
-        internal static string GetDragDropContent(DragEventArgs e)
-        {
+        internal static string GetDragDropContent(DragEventArgs e) {
             string result = null;
-            if (e.Data.GetDataPresent(DataFormats.StringFormat))
+            if (e.Data.GetDataPresent(DataFormats.StringFormat)) {
                 result = e.Data.GetData(DataFormats.StringFormat).ToString();
-            else if (e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
+            }
+            else if (e.Data.GetDataPresent(DataFormats.FileDrop)) {
                 var files = e.Data.GetData(DataFormats.FileDrop) as string[];
                 result = File.ReadAllText(files.First());
             }
+
             return result;
         }
 
-        internal static void HandleContentDragEnter(DragEventArgs e)
-        {
+        internal static void HandleContentDragEnter(DragEventArgs e) {
             if (e.Data.GetDataPresent(DataFormats.StringFormat)
-                || e.Data.GetDataPresent(DataFormats.FileDrop))
+                || e.Data.GetDataPresent(DataFormats.FileDrop)) {
                 e.Effect = DragDropEffects.Copy;
-            else
+            }
+            else {
                 e.Effect = DragDropEffects.None;
+            }
         }
 
-        internal static string FormatSize(long size)
-        {
-            if (size > Size1K * Size1K * Size1K)
+        internal static string FormatSize(long size) {
+            if (size > Size1K * Size1K * Size1K) {
                 return Convert.ToInt32(size / Size1K / Size1K / Size1K) + " " + SizeGb;
-            else if (size > Size1K * Size1K)
+            }
+
+            if (size > Size1K * Size1K) {
                 return Convert.ToInt32(size / Size1K / Size1K) + " " + SizeMb;
-            else if (size > Size1K)
+            }
+
+            if (size > Size1K) {
                 return Convert.ToInt32(size / Size1K) + " " + SizeKb;
-            else
-                return size + " B";
+            }
+
+            return size + " B";
         }
 
-        internal static void SetTextBoxStyle(TextEditorControl editor)
-        {
+        internal static void SetTextBoxStyle(TextEditorControl editor) {
             editor.ShowEOLMarkers = false;
             editor.ShowHRuler = false;
             editor.ShowInvalidLines = false;
@@ -116,27 +116,25 @@ namespace Xnlab.SQLMon.Common
             editor.SetHighlighting("TSQL");
         }
 
-        internal static void SelectText(TextEditorControl editor, string text)
-        {
+        internal static void SelectText(TextEditorControl editor, string text) {
             var offset = editor.Text.IndexOf(text);
             var endOffset = offset + text.Length;
-            editor.ActiveTextAreaControl.TextArea.Caret.Position = editor.ActiveTextAreaControl.TextArea.Document.OffsetToPosition(endOffset);
+            editor.ActiveTextAreaControl.TextArea.Caret.Position =
+                editor.ActiveTextAreaControl.TextArea.Document.OffsetToPosition(endOffset);
             editor.ActiveTextAreaControl.TextArea.SelectionManager.ClearSelection();
             var document = editor.ActiveTextAreaControl.TextArea.Document;
-            var selection = new DefaultSelection(document, document.OffsetToPosition(offset), document.OffsetToPosition(endOffset));
+            var selection = new DefaultSelection(document, document.OffsetToPosition(offset),
+                document.OffsetToPosition(endOffset));
             editor.ActiveTextAreaControl.TextArea.SelectionManager.SetSelection(selection);
         }
 
-        internal static void Split(string content, string splitter, out string key, out string value)
-        {
+        internal static void Split(string content, string splitter, out string key, out string value) {
             var index = content.IndexOf(splitter);
-            if (index != -1)
-            {
+            if (index != -1) {
                 key = content.Substring(0, index);
                 value = content.Substring(index + 1).Replace(@"\r\n", "\r\n");
             }
-            else
-            {
+            else {
                 key = string.Empty;
                 value = string.Empty;
             }

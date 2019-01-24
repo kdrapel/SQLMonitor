@@ -3,48 +3,37 @@ using System.Windows.Forms;
 
 namespace Xnlab.SQLMon.UI
 {
-    public partial class FileNameDialog : BaseDialog
-    {
+    public partial class FileNameDialog : BaseDialog {
         private readonly bool _isSave;
 
-        public FileNameDialog()
-        {
+        public FileNameDialog() {
             InitializeComponent();
         }
 
         public FileNameDialog(string title, bool isSave, string name)
-            : this()
-        {
+            : this() {
             _isSave = isSave;
-            this.Text = title;
+            Text = title;
             txtName.Text = name;
         }
 
-        public string FilePath
-        {
-            get { return txtFile.Text; }
-        }
+        public string FilePath => txtFile.Text;
 
-        public string ObjectName
-        {
-            get { return txtName.Text; }
-        }
+        public string ObjectName => txtName.Text;
 
-        private void OnGoClick(object sender, EventArgs e)
-        {
-            if (!string.IsNullOrEmpty(txtFile.Text))
-            {
+        private void OnGoClick(object sender, EventArgs e) {
+            if (!string.IsNullOrEmpty(txtFile.Text)) {
                 if (!string.IsNullOrEmpty(txtName.Text))
-                    this.DialogResult = DialogResult.OK;
+                    DialogResult = DialogResult.OK;
                 else
                     epHint.SetError(txtFile, "Please input name.");
             }
-            else
+            else {
                 epHint.SetError(txtFile, "Please input file.");
+            }
         }
 
-        private void OnChooseFileClick(object sender, EventArgs e)
-        {
+        private void OnChooseFileClick(object sender, EventArgs e) {
             FileDialog dlg;
             if (_isSave)
                 dlg = new SaveFileDialog();

@@ -18,66 +18,40 @@ using System.Windows.Forms;
 namespace Xnlab.SQLMon.Controls.OutlookGrid
 {
     #region implementation of the OutlookGrid!
-    public partial class OutlookGrid : DataGridView
-    {
+
+    public partial class OutlookGrid : DataGridView {
+
         #region OutlookGrid constructor
-        public OutlookGrid()
-        {
+
+        public OutlookGrid() {
             InitializeComponent();
 
             // very important, this indicates that a new default row class is going to be used to fill the grid
             // in this case our custom OutlookGridRow class
             base.RowTemplate = new OutlookGridRow();
-            this._groupTemplate = new OutlookgGridDefaultGroup();
-
+            GroupTemplate = new OutlookgGridDefaultGroup();
         }
+
         #endregion OutlookGrid constructor
 
         #region OutlookGrid property definitions
+
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public new DataGridViewRow RowTemplate
-        {
-            get { return base.RowTemplate;}
-        }
+        public new DataGridViewRow RowTemplate => base.RowTemplate;
 
-        private IOutlookGridGroup _groupTemplate;
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public IOutlookGridGroup GroupTemplate
-        {
-            get
-            {
-                return _groupTemplate;
-            }
-            set
-            {
-                _groupTemplate = value;
-            }
-        }
+        public IOutlookGridGroup GroupTemplate { get; set; }
 
-        private Image _iconCollapse;
-        [Category("Appearance")]
-        public Image CollapseIcon
-        {
-            get { return _iconCollapse; }
-            set { _iconCollapse = value; }
-        }
+        [Category("Appearance")] public Image CollapseIcon { get; set; }
 
-        private Image _iconExpand;
-        [Category("Appearance")]
-        public Image ExpandIcon
-        {
-            get { return _iconExpand; }
-            set { _iconExpand = value; }
-        }
-
+        [Category("Appearance")] public Image ExpandIcon { get; set; }
 
         private DataSourceManager _dataSource;
-        public new object DataSource
-        {
-            get
-            {
+
+        public new object DataSource {
+            get {
                 if (_dataSource == null) return null;
 
                 // special case, datasource is bound to itself.
@@ -88,79 +62,70 @@ namespace Xnlab.SQLMon.Controls.OutlookGrid
                 return _dataSource.DataSource;
             }
         }
+
         #endregion OutlookGrid property definitions
 
         #region OutlookGrid new methods
-        public void CollapseAll()
-        {
+
+        public void CollapseAll() {
             SetGroupCollapse(true);
         }
 
-        public void ExpandAll()
-        {
+        public void ExpandAll() {
             SetGroupCollapse(false);
         }
 
-        public void ClearGroups()
-        {
+        public void ClearGroups() {
             _dataSource = null;
-            _groupTemplate.Column = null; //reset
+            GroupTemplate.Column = null; //reset
             //FillGrid(null);
         }
 
-        public void BindData(object dataSource, string dataMember)
-        {
-            this.DataMember = DataMember;
-            if (dataSource == null)
-            {
-                this._dataSource = null;
+        public void BindData(object dataSource, string dataMember) {
+            DataMember = DataMember;
+            if (dataSource == null) {
+                _dataSource = null;
                 Columns.Clear();
             }
-            else
-            {
-                this._dataSource = new DataSourceManager(dataSource, dataMember);
+            else {
+                _dataSource = new DataSourceManager(dataSource, dataMember);
                 SetupColumns();
                 FillGrid(null);
             }
         }
-        public override void Sort(IComparer comparer)
-        {
+
+        public override void Sort(IComparer comparer) {
             if (_dataSource == null) // if no datasource is set, then bind to the grid itself
                 _dataSource = new DataSourceManager(this, null);
 
             _dataSource.Sort(comparer);
-            FillGrid(_groupTemplate);
+            FillGrid(GroupTemplate);
         }
 
-        
-        public override void Sort(DataGridViewColumn dataGridViewColumn, ListSortDirection direction)
-        {
+        public override void Sort(DataGridViewColumn dataGridViewColumn, ListSortDirection direction) {
             if (_dataSource == null) // if no datasource is set, then bind to the grid itself
                 _dataSource = new DataSourceManager(this, null);
 
             _dataSource.Sort(new OutlookGridRowComparer(dataGridViewColumn.Index, direction));
-            FillGrid(_groupTemplate);
+            FillGrid(GroupTemplate);
         }
+
         #endregion OutlookGrid new methods
 
         #region OutlookGrid event handlers
-        protected override void OnCellBeginEdit(DataGridViewCellCancelEventArgs e)
-        {
-            var row = (OutlookGridRow)base.Rows[e.RowIndex];
+
+        protected override void OnCellBeginEdit(DataGridViewCellCancelEventArgs e) {
+            var row = (OutlookGridRow) Rows[e.RowIndex];
             if (row.IsGroupRow)
                 e.Cancel = true;
             else
                 base.OnCellBeginEdit(e);
         }
 
-        protected override void OnCellDoubleClick(DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex >= 0)
-            {
-
-                var row = (OutlookGridRow)base.Rows[e.RowIndex];
-                if (row.IsGroupRow)
-                {
+        protected override void OnCellDoubleClick(DataGridViewCellEventArgs e) {
+            if (e.RowIndex >= 0) {
+                var row = (OutlookGridRow) Rows[e.RowIndex];
+                if (row.IsGroupRow) {
                     row.Group.Collapsed = !row.Group.Collapsed;
 
                     //this is a workaround to make the grid re-calculate it's contents and backgroun bounds
@@ -171,22 +136,21 @@ namespace Xnlab.SQLMon.Controls.OutlookGrid
                     return;
                 }
             }
+
             base.OnCellClick(e);
         }
 
         // the OnCellMouseDown is overriden so the control can check to see if the
         // user clicked the + or - sign of the group-row
-        protected override void OnCellMouseDown(DataGridViewCellMouseEventArgs e)
-        {
-            if (e.RowIndex < 0)
-            {
+        protected override void OnCellMouseDown(DataGridViewCellMouseEventArgs e) {
+            if (e.RowIndex < 0) {
                 base.OnCellMouseDown(e);
                 return;
             }
-            var row = (OutlookGridRow)base.Rows[e.RowIndex];
-            if (row.IsGroupRow && row.IsIconHit(e))
-            {
-                Debug.WriteLine("OnCellMouseDown " + DateTime.Now.Ticks.ToString());
+
+            var row = (OutlookGridRow) Rows[e.RowIndex];
+            if (row.IsGroupRow && row.IsIconHit(e)) {
+                Debug.WriteLine("OnCellMouseDown " + DateTime.Now.Ticks);
                 row.Group.Collapsed = !row.Group.Collapsed;
 
                 //this is a workaround to make the grid re-calculate it's contents and backgroun bounds
@@ -195,34 +159,33 @@ namespace Xnlab.SQLMon.Controls.OutlookGrid
                 row.Visible = false;
                 row.Visible = true;
             }
-            else
+            else {
                 base.OnCellMouseDown(e);
+            }
         }
+
         #endregion OutlookGrid event handlers
 
         #region Grid Fill functions
-        private void SetGroupCollapse(bool collapsed)
-        {
+
+        private void SetGroupCollapse(bool collapsed) {
             if (Rows.Count == 0) return;
-            if (_groupTemplate == null) return;
+            if (GroupTemplate == null) return;
 
             // set the default grouping style template collapsed property
-            _groupTemplate.Collapsed = collapsed;
+            GroupTemplate.Collapsed = collapsed;
 
             // loop through all rows to find the GroupRows
             foreach (OutlookGridRow row in Rows)
-            {
                 if (row.IsGroupRow)
                     row.Group.Collapsed = collapsed;
-            }
 
             // workaround, make the grid refresh properly
             Rows[0].Visible = !Rows[0].Visible;
             Rows[0].Visible = !Rows[0].Visible;
         }
 
-        private void SetupColumns()
-        {
+        private void SetupColumns() {
             ArrayList list;
 
             // clear all columns, this is a somewhat crude implementation
@@ -232,12 +195,10 @@ namespace Xnlab.SQLMon.Controls.OutlookGrid
             // start filling the grid
             if (_dataSource == null)
                 return;
-            else
-                list = _dataSource.Rows;
+            list = _dataSource.Rows;
             if (list.Count <= 0) return;
 
-            foreach (string c in _dataSource.Columns)
-            {
+            foreach (string c in _dataSource.Columns) {
                 int index;
                 var column = Columns[c];
                 if (column == null)
@@ -246,56 +207,48 @@ namespace Xnlab.SQLMon.Controls.OutlookGrid
                     index = column.Index;
                 Columns[index].SortMode = DataGridViewColumnSortMode.Programmatic; // always programmatic!
             }
-
         }
 
         /// <summary>
-        /// the fill grid method fills the grid with the data from the DataSourceManager
-        /// It takes the grouping style into account, if it is set.
+        ///     the fill grid method fills the grid with the data from the DataSourceManager
+        ///     It takes the grouping style into account, if it is set.
         /// </summary>
-        private void FillGrid(IOutlookGridGroup groupingStyle)
-        {
-
+        private void FillGrid(IOutlookGridGroup groupingStyle) {
             ArrayList list;
             OutlookGridRow row;
 
-            this.Rows.Clear();
+            Rows.Clear();
 
             // start filling the grid
-            if (_dataSource == null) 
-                return; 
-            else
-                list = _dataSource.Rows;
+            if (_dataSource == null)
+                return;
+            list = _dataSource.Rows;
             if (list.Count <= 0) return;
 
             // this block is used of grouping is turned off
             // this will simply list all attributes of each object in the list
-            if (groupingStyle == null)
-            {
-                foreach (DataSourceRow r in list)
-                {
-                    row = (OutlookGridRow) this.RowTemplate.Clone(); 
-                    foreach (var val in r)
-                    {
+            if (groupingStyle == null) {
+                foreach (DataSourceRow r in list) {
+                    row = (OutlookGridRow) RowTemplate.Clone();
+                    foreach (var val in r) {
                         DataGridViewCell cell = new DataGridViewTextBoxCell();
                         cell.Value = val.ToString();
                         row.Cells.Add(cell);
                     }
+
                     Rows.Add(row);
                 }
             }
 
             // this block is used when grouping is used
             // items in the list must be sorted, and then they will automatically be grouped
-            else
-            {
+            else {
                 IOutlookGridGroup groupCur = null;
                 object result = null;
                 var counter = 0; // counts number of items in the group
 
-                foreach (DataSourceRow r in list)
-                {
-                    row = (OutlookGridRow)this.RowTemplate.Clone();
+                foreach (DataSourceRow r in list) {
+                    row = (OutlookGridRow) RowTemplate.Clone();
                     result = r[groupingStyle.Column.Index];
                     if (groupCur != null && groupCur.CompareTo(result) == 0) // item is part of the group
                     {
@@ -307,7 +260,7 @@ namespace Xnlab.SQLMon.Controls.OutlookGrid
                         if (groupCur != null)
                             groupCur.ItemCount = counter;
 
-                        groupCur = (IOutlookGridGroup)groupingStyle.Clone(); // init
+                        groupCur = (IOutlookGridGroup) groupingStyle.Clone(); // init
                         groupCur.Value = result;
                         row.Group = groupCur;
                         row.IsGroupRow = true;
@@ -316,25 +269,25 @@ namespace Xnlab.SQLMon.Controls.OutlookGrid
                         Rows.Add(row);
 
                         // add content row after this
-                        row = (OutlookGridRow)this.RowTemplate.Clone();
+                        row = (OutlookGridRow) RowTemplate.Clone();
                         row.Group = groupCur;
                         counter = 1; // reset counter for next group
                     }
 
-
-                    foreach (var obj in r)
-                    {
+                    foreach (var obj in r) {
                         DataGridViewCell cell = new DataGridViewTextBoxCell();
                         cell.Value = obj.ToString();
                         row.Cells.Add(cell);
                     }
+
                     Rows.Add(row);
                     groupCur.ItemCount = counter;
                 }
             }
-
         }
+
         #endregion Grid Fill functions
     }
+
     #endregion implementation of the OutlookGrid!
 }

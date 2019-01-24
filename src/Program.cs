@@ -6,11 +6,16 @@ using Monitor = Xnlab.SQLMon.UI.Monitor;
 
 namespace Xnlab.SQLMon
 {
-    static class Program
-    {
+    internal static class Program {
+
+        #region Methods
+
+        private static void HandleException(Exception e) {
+            MessageBox.Show(e.Message, Settings.Title, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+        }
+
         [STAThread]
-        static void Main()
-        {
+        private static void Main() {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.ThreadException += OnApplicationThreadException;
@@ -18,19 +23,14 @@ namespace Xnlab.SQLMon
             Application.Run(new Monitor());
         }
 
-        private static void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            HandleException(e.ExceptionObject as Exception);
-        }
-
-        private static void OnApplicationThreadException(object sender, ThreadExceptionEventArgs e)
-        {
+        private static void OnApplicationThreadException(object sender, ThreadExceptionEventArgs e) {
             HandleException(e.Exception);
         }
 
-        private static void HandleException(Exception e)
-        {
-            MessageBox.Show(e.Message, Settings.Title, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+        private static void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e) {
+            HandleException(e.ExceptionObject as Exception);
         }
+
+        #endregion Methods
     }
 }

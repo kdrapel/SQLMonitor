@@ -72,11 +72,17 @@ namespace Xnlab.SQLMon.Logic
         public const string HealthCategoryDatabase = "Database";
 
         public event EventHandler<MessageEventArgs> Message;
+
         public event EventHandler<AlertEventArgs> Alert;
+
         public event EventHandler<ServerInfoEventArgs> RequestPerformanceServer;
+
         public event EventHandler<PerformanceRecordEventArgs> UpdateServerInfo;
+
         public event EventHandler<ServerInfoEventArgs> RequestHealthServer;
+
         public event EventHandler<HealthEventArgs> Health;
+
         private readonly Dictionary<string, NotifiedMonitorItem> _notifiedAlerts = new Dictionary<string, NotifiedMonitorItem>();
         private readonly PerformanceCounter _cpuCounter;
         private readonly PerformanceCounter _ramCounter;
@@ -406,7 +412,6 @@ declare @oldcpu_busy 	bigint	/* used to see if DataServer has been rebooted */
 declare @interval	bigint
 declare @mspertick	bigint	/* milliseconds per tick */
 
-
 /*
 **  Set @mspertick.  This is just used to make the numbers easier to handle
 **  and avoid overflow.
@@ -624,6 +629,7 @@ update master.dbo.spt_monitor
                                                     }
                                                 });
                                             break;
+
                                         case 2:
                                             var tasks = SqlHelper.Query(QueryEngine.SqlWaitingTasks, server);
                                             tasks.Rows.Cast<DataRow>().ForEach(r =>
@@ -638,6 +644,7 @@ update master.dbo.spt_monitor
                                                     }
                                                 });
                                             break;
+
                                         case 3:
                                             var tableServer = server.Clone();
                                             tableServer.Database = item.Target;
@@ -645,10 +652,12 @@ update master.dbo.spt_monitor
                                             if (count != null && Convert.ToInt64(count["RowCount"]) == 0)
                                                 ShowAlert(item, item.Target + QueryEngine.Dot + item.CondictionValue, item.Target + QueryEngine.Dot + item.CondictionValue);
                                             break;
+
                                         default:
                                             break;
                                     }
                                     break;
+
                                 case AlertTypes.Server:
                                     switch (item.CondictionType)
                                     {
@@ -662,6 +671,7 @@ update master.dbo.spt_monitor
                                                 ShowAlert(item, server.Server, ex.Message);
                                             }
                                             break;
+
                                         default:
                                             break;
                                     }
@@ -683,7 +693,6 @@ update master.dbo.spt_monitor
                             }
                         }
                     });
-
             }
             catch (Exception ex)
             {
@@ -707,19 +716,24 @@ update master.dbo.spt_monitor
                         case 0:
                             type = "SQL executes: ";
                             break;
+
                         case 1:
                             type = "SQL lasts: ";
                             break;
+
                         case 2:
                             type = "SQL blocked: ";
                             break;
+
                         case 3:
                             type = "Empty table: ";
                             break;
+
                         default:
                             break;
                     }
                     break;
+
                 case AlertTypes.Server:
                     break;
                 //case AlertTypes.CPU:

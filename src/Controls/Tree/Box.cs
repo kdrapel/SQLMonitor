@@ -1,4 +1,5 @@
 #region Copyright ?2007 Rotem Sapir
+
 /*
  * This software is provided 'as-is', without any express or implied warranty.
  * In no event will the authors be held liable for any damages arising from the
@@ -17,17 +18,17 @@
  * without the express written permission of the copyright holders, where
  * "substantial" is defined as enough code to be recognizably from this library.
 */
-#endregion
+
+#endregion Copyright ?2007 Rotem Sapir
 
 using System.Drawing;
 
 namespace Xnlab.SQLMon.Controls.Tree
 {
-    public class Box
-    {
-        public int Width;
+    public class Box {
         public int Height;
         public Color LineColor;
         public int LineWidth;
+        public int Width;
     }
 }

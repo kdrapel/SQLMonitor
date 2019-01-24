@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ICSharpCode.TextEditor;
+using ICSharpCode.TextEditor.Document;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -16,8 +18,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using ICSharpCode.TextEditor;
-using ICSharpCode.TextEditor.Document;
 using Xnlab.SQLMon.Common;
 using Xnlab.SQLMon.Controls.OutlookGrid;
 using Xnlab.SQLMon.Diff;
@@ -423,23 +423,29 @@ namespace Xnlab.SQLMon.UI
                     case WorkModes.Alerts:
                         LoadMonitorItems();
                         break;
+
                     case WorkModes.Histories:
                         LoadNotifiedAlerts();
                         break;
+
                     case WorkModes.Performance:
                         GetPerformanceData();
                         break;
+
                     case WorkModes.Analysis:
                         Analyze();
                         break;
+
                     case WorkModes.TableData:
                         var tableData = tcMain.SelectedTab.Controls[0] as UserTableData;
                         tableData.Execute();
                         break;
+
                     case WorkModes.Query:
                         var queryData = tcMain.SelectedTab.Controls[0] as UserQuery;
                         queryData.Execute();
                         break;
+
                     case WorkModes.Activities:
                         if (CheckCurrentServerMessage())
                         {
@@ -455,6 +461,7 @@ namespace Xnlab.SQLMon.UI
                                         filter = " AND " + filter;
                                     sql = QueryEngine.SqlProcesses + filter;
                                     break;
+
                                 case ActivityTypes.Job:
                                     if (_currentServerInfo.IsAzure)
                                         sql = "SELECT 'NotSupported' AS Result";
@@ -512,9 +519,9 @@ namespace Xnlab.SQLMon.UI
                                 {
                                     ((ProcessVisualizer)f).LoadProcesses();
                                 });
-
                         }
                         break;
+
                     case WorkModes.Summary:
                     case WorkModes.Objects:
                         if (reload)
@@ -524,6 +531,7 @@ namespace Xnlab.SQLMon.UI
                             MonitorEngine.Instance.CheckServerHealth();
                         }
                         break;
+
                     default:
                         break;
                 }
@@ -536,6 +544,7 @@ namespace Xnlab.SQLMon.UI
                         if (dgvProcesses.Rows.Count > 0)
                             GetProcessCommand(0, 0);
                         break;
+
                     default:
                         break;
                 }
@@ -705,9 +714,9 @@ namespace Xnlab.SQLMon.UI
                 //if (tableInfo != null)
                 //{
                 //    var count = 0;
-                //    tableInfo.AsEnumerable().ForEach((r) => 
+                //    tableInfo.AsEnumerable().ForEach((r) =>
                 //    {
-                //        var row = objects.NewRow();                        
+                //        var row = objects.NewRow();
                 //        row[KeyName] = r["Logical_Name"];
                 //        row[KeyPath] = r["Physical_Name"];
                 //        if (n.Nodes.ContainsKey(KeyTables))
@@ -851,6 +860,7 @@ namespace Xnlab.SQLMon.UI
                         case ActivityTypes.Process:
                             text = QueryEngine.GetSessionSql(id, DefaultServerInfo);
                             break;
+
                         case ActivityTypes.Job:
                             var job = QuerySet("exec msdb.dbo.sp_help_job '" + id + "'", DefaultServerInfo);
                             if (job != null && job.Tables.Count >= 4)
@@ -864,6 +874,7 @@ namespace Xnlab.SQLMon.UI
                                     text = "--Current step: " + index + "\r\n--" + job.Tables[1].Rows[index]["subsystem"].ToString() + "\r\n\r\n" + job.Tables[1].Rows[index]["command"].ToString();
                             }
                             break;
+
                         default:
                             break;
                     }
@@ -977,10 +988,12 @@ namespace Xnlab.SQLMon.UI
                         var queryData = tcMain.TabPages[i].Controls[0] as UserQuery;
                         queryData.Cancel();
                         break;
+
                     case WorkModes.TableData:
                         var tableData = tcMain.TabPages[i].Controls[0] as UserTableData;
                         tableData.Cancel();
                         break;
+
                     default:
                         break;
                 }
@@ -1007,10 +1020,12 @@ namespace Xnlab.SQLMon.UI
                     FindCommand<ToolStripButton>(CommandJobs).Checked = false;
                     dtcActivitiesDB.HeaderText = "DB";
                     break;
+
                 case ActivityTypes.Job:
                     FindCommand<ToolStripButton>(CommandProcesses).Checked = false;
                     dtcActivitiesDB.HeaderText = "Step";
                     break;
+
                 default:
                     break;
             }
@@ -1025,13 +1040,16 @@ namespace Xnlab.SQLMon.UI
                 case Keys.F5:
                     RefreshData();
                     break;
+
                 case Keys.Escape:
                     tcbRefreshActivitiesIntervals.SelectedIndex = 0;
                     break;
+
                 case Keys.F4:
                     if (e.Control)
                         CloseCurrentTab();
                     break;
+
                 default:
                     break;
             }
@@ -1083,6 +1101,7 @@ namespace Xnlab.SQLMon.UI
                             var performance = tcMain.TabPages[i].Controls[0] as Performance;
                             performance.SetInterval(cboPerformanceIntervals.Text);
                             break;
+
                         default:
                             break;
                     }
@@ -1115,9 +1134,11 @@ namespace Xnlab.SQLMon.UI
             {
                 case AlertMethods.Log:
                     break;
+
                 case AlertMethods.MsgBox:
                     this.Invoke(() => ShowMessage(e.Message, title, MessageBoxIcon.Exclamation));
                     break;
+
                 case AlertMethods.Mail:
                     var smtpClient = new SmtpClient();
                     var basicCredential =
@@ -1136,6 +1157,7 @@ namespace Xnlab.SQLMon.UI
                     message.To.Add(Settings.Instance.AlertMailReceiver);
                     smtpClient.Send(message);
                     break;
+
                 default:
                     break;
             }
@@ -1205,6 +1227,7 @@ namespace Xnlab.SQLMon.UI
                     case KeyServer:
                         ready = LoadServer(node);
                         break;
+
                     case KeyDatabase:
                         _currentDatabase = node.Text;
                         _currentServerInfo.Database = _currentDatabase;
@@ -1226,26 +1249,32 @@ namespace Xnlab.SQLMon.UI
                                                     type = KeyTable;
                                                     image = 8;
                                                     break;
+
                                                 case KeyViews:
                                                     type = KeyView;
                                                     image = 4;
                                                     break;
+
                                                 case KeySPs:
                                                     type = KeySp;
                                                     image = 3;
                                                     break;
+
                                                 case KeyFunctions:
                                                     type = KeyFunction;
                                                     image = 3;
                                                     break;
+
                                                 case KeyAssemblies:
                                                     type = KeyAssembly;
                                                     image = 3;
                                                     break;
+
                                                 case KeyTriggers:
                                                     type = KeyTrigger;
                                                     image = 3;
                                                     break;
+
                                                 default:
                                                     break;
                                             }
@@ -1262,6 +1291,7 @@ namespace Xnlab.SQLMon.UI
                             ShowObjects(node);
                         }
                         break;
+
                     default:
                         ready = true;
                         break;
@@ -1354,6 +1384,7 @@ namespace Xnlab.SQLMon.UI
                                     _currentObjectType = KeyDatabase;
                                     LoadDatabase(node.Parent);
                                     break;
+
                                 case KeyTables:
                                 case KeyViews:
                                 case KeyFunctions:
@@ -1372,6 +1403,7 @@ namespace Xnlab.SQLMon.UI
                                             //todo:
                                             data = Query("SELECT a.name, NULL AS SpaceUsed, NULL AS Count, create_date AS CreateDate, modify_date AS ModifyDate, f.name AS Path FROM sys.assemblies a WITH (NOLOCK) LEFT JOIN sys.assembly_files f WITH (NOLOCK) ON a.assembly_id = f.assembly_id", CurrentServerInfo);
                                             break;
+
                                         case KeyTables:
                                             data = GetObjects(KeyTables);
                                             /*sql = @"Declare @Low float
@@ -1383,7 +1415,7 @@ namespace Xnlab.SQLMon.UI
             from sysindexes i1
             inner join sysobjects o on o.id = i1.id
             inner join sysindexes i2 on o.id = i2.id
-            where i1.indid < 2 
+            where i1.indid < 2
             and i2.indid < 255
             group by o.name";
                                             var space = Query(sql, CurrentServerInfo);*/
@@ -1409,6 +1441,7 @@ namespace Xnlab.SQLMon.UI
                                             });
                                             LoadObjects(objects);
                                             break;
+
                                         case KeySPs:
                                         case KeyViews:
                                         case KeyFunctions:
@@ -1427,18 +1460,22 @@ namespace Xnlab.SQLMon.UI
                                                         image = 3;
                                                         row[KeyType] = ObjectModes.Sp;
                                                         break;
+
                                                     case KeyViews:
                                                         row[KeyType] = ObjectModes.View;
                                                         image = 4;
                                                         break;
+
                                                     case KeyFunctions:
                                                         row[KeyType] = ObjectModes.Function;
                                                         image = 3;
                                                         break;
+
                                                     case KeyTriggers:
                                                         row[KeyType] = ObjectModes.Trigger;
                                                         image = 3;
                                                         break;
+
                                                     default:
                                                         image = 0;
                                                         break;
@@ -1448,6 +1485,7 @@ namespace Xnlab.SQLMon.UI
                                             });
                                             LoadObjects(objects);
                                             break;
+
                                         default:
                                             break;
                                     }
@@ -1457,6 +1495,7 @@ namespace Xnlab.SQLMon.UI
                                         node.ExpandAll();
                                     });
                                     break;
+
                                 case KeyTable:
                                 case KeySp:
                                 case KeyView:
@@ -1476,6 +1515,7 @@ namespace Xnlab.SQLMon.UI
                                     }
                                     GetObjectScript(node.Text, null, ObjectModes.Objects);
                                     break;
+
                                 default:
                                     _currentObjectMode = ObjectModes.Server;
                                     break;
@@ -1516,21 +1556,26 @@ namespace Xnlab.SQLMon.UI
             {
                 case KeyTriggers:
                     return Query("SELECT '' AS SchemaName, name, create_date AS CreateDate, modify_date AS ModifyDate, type FROM sys.triggers WITH (NOLOCK) WHERE parent_class = 0", CurrentServerInfo);
+
                 default:
                     switch (objectType)
                     {
                         case KeyTables:
                             types = "'U'";
                             break;
+
                         case KeyViews:
                             types = "'V'";
                             break;
+
                         case KeyFunctions:
                             types = "'FN', 'IF', 'TF'";
                             break;
+
                         case KeySPs:
                             types = "'P'";
                             break;
+
                         default:
                             types = string.Empty;
                             break;
@@ -1597,7 +1642,7 @@ CREATE TABLE [dbo].[{0}](
 	[hostname] [varchar](256) NULL,
 	[PostTime] [datetime] NULL,
 	[Version] [int] NOT NULL,
- CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+ CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED
 (
 	[ID] ASC
 )WITH (IGNORE_DUP_KEY = OFF) ON [PRIMARY]
@@ -1636,9 +1681,9 @@ INSERT INTO dbo.{0}(databasename, eventtype,objectname, objecttype, sqlcommand, 
 VALUES(
 @data.value('(/EVENT_INSTANCE/DatabaseName)[1]', 'varchar(256)'),
 @data.value('(/EVENT_INSTANCE/EventType)[1]', 'varchar(50)'),  -- value is case-sensitive
-@data.value('(/EVENT_INSTANCE/ObjectName)[1]', 'varchar(256)'), 
-@data.value('(/EVENT_INSTANCE/ObjectType)[1]', 'varchar(25)'), 
-@data.value('(/EVENT_INSTANCE/TSQLCommand)[1]', 'varchar(max)'), 
+@data.value('(/EVENT_INSTANCE/ObjectName)[1]', 'varchar(256)'),
+@data.value('(/EVENT_INSTANCE/ObjectType)[1]', 'varchar(25)'),
+@data.value('(/EVENT_INSTANCE/TSQLCommand)[1]', 'varchar(max)'),
 @data.value('(/EVENT_INSTANCE/LoginName)[1]', 'varchar(256)'),
 HOST_NAME(),
 GETDATE(),
@@ -1750,18 +1795,23 @@ GO
                 case ObjectModes.Assembly:
                     objectType = _currentObjectType;
                     break;
+
                 case ObjectModes.Table:
                     objectType = KeyTables;
                     break;
+
                 case ObjectModes.Job:
                     objectType = KeyJobs;
                     break;
+
                 case ObjectModes.Trigger:
                     objectType = KeyTriggers;
                     break;
+
                 case ObjectModes.Index:
                     objectType = KeyIndexes;
                     break;
+
                 default:
                     objectType = string.Empty;
                     break;
@@ -1773,14 +1823,15 @@ GO
                 case KeyAssemblies:
                     text = string.Empty;
                     break;
+
                 case KeyTables:
                     sql = @"	declare @Id int, @i int, @i2 int,@Sql varchar(max),@Sql2 varchar(max), @f1 varchar(5), @f2 varchar(5), @f3 varchar(5), @f4 varchar(5), @T varchar(5)
 	select @Id=object_id('" + objectName + @"'), @f1 = char(13) + char(10), @f2 = '	', @f3=@f1+@f2, @f4=',' + @f3
-	
+
 	if not(@Id is null)
     BEGIN
 	declare @Data table(Id int identity primary key, D varchar(max) not null, ic int null, re int null, o int not null);
-	
+
 	-- Columns
 	with c as(
 		select c.column_id, Nr = row_number() over(order by c.column_id), Clr=count(*) over(),
@@ -1795,7 +1846,7 @@ GO
 					when t.Name in('nvarchar','nchar')
 						then '(' + isnull(convert(varchar,nullif(c.max_length,-1) / 2), 'max') + isnull(','+convert(varchar,nullif(c.scale, 0)), '') + ')'
 					else '??'
-					end + 
+					end +
 				case when ic.object_id is not null then ' identity(' + convert(varchar,ic.seed_value) + ',' + convert(varchar,ic.increment_value) + ')' else '' end +
 				case when c.is_computed=1 then 'as' + cc.definition when c.is_nullable = 1 then ' null' else ' not null' end +
 				case c.is_rowguidcol when 1 then ' rowguidcol' else '' end +
@@ -1812,30 +1863,30 @@ GO
 		left outer join sys.identity_columns ic
 		on ic.object_id=c.object_id and ic.column_id=c.column_id
 		where c.object_id=@Id
-		
+
 	)
 		insert into @Data(D, o)
 		select '	' + D + case Nr when Clr then '' else ',' + @f1 end, 0
-		from c where NOT D IS NULL 
+		from c where NOT D IS NULL
 		order by column_id
-	
+
 	-- SubObjects
 	set @i=0
 	while 1=1
 		begin
 		select top 1 @i=c.object_id, @T = c.type, @i2=i.index_id
-		from sys.objects c 
+		from sys.objects c
 		left outer join sys.indexes i
 		on i.object_id=@Id and i.name=c.name
 		where parent_object_id=@Id and c.object_id>@i and c.type not in('D')
 		order by c.object_id
 		if @@rowcount=0 break
-		if @T = 'C' 
-			insert into @Data 
+		if @T = 'C'
+			insert into @Data
 			select @f4 + 'check ' + case is_not_for_replication when 1 then 'not for replication ' else '' end + definition, null, null, 10
 			from sys.check_constraints where object_id=@i
 		else if @T = 'Pk'
-			insert into @Data 
+			insert into @Data
 			select @f4 + 'primary key' + isnull(' ' + nullif(lower(i.type_desc),'clustered'), ''), @i2, null, 20
 			from sys.indexes i
 			where i.object_id=@Id and i.index_id=@i2
@@ -1843,12 +1894,12 @@ GO
 			insert into @Data values(@f4 + 'unique', @i2, null, 30)
 		else if @T = 'f'
 			begin
-			insert into @Data 
+			insert into @Data
 			select @f4 + 'foreign key', -1, @i, 40
 			from sys.foreign_keys f
 			where f.object_id=@i
-			
-			insert into @Data 
+
+			insert into @Data
 			select ' references ' + quotename(s.name) + '.' + quotename(o.name), -2, @i, 41
 			from sys.foreign_keys f
 			inner join sys.objects o
@@ -1856,8 +1907,8 @@ GO
 			inner join sys.schemas s
 			on s.schema_id=o.schema_id
 			where f.object_id=@i
-			
-			insert into @Data 
+
+			insert into @Data
 			select ' not for replication', -3, @i, 42
 			from sys.foreign_keys f
 			inner join sys.objects o
@@ -1871,7 +1922,7 @@ GO
 		end
 
 	insert into @Data values(@f1+')', null, null, 100)
-	
+
 	-- Indexes
 	insert into @Data
 	select @f1 + 'create ' + case is_unique when 1 then 'unique ' else '' end + lower(s.type_desc) + ' index ' + 'i' + convert(varchar, row_number() over(order by index_id)) + ' on ' + quotename(sc.Name) + '.' + quotename(o.name), index_id, null, 1000
@@ -1881,17 +1932,17 @@ GO
 	inner join sys.schemas sc
 	on sc.schema_id=o.schema_id
 	where s.object_id=@Id and is_unique_constraint=0 and is_primary_key=0 and s.type_desc != 'heap'
-	
+
 	-- columns
 	set @i=0
 	while 1=1
 		begin
-		select top 1 @i=ic from @Data where ic>@i order by ic 
+		select top 1 @i=ic from @Data where ic>@i order by ic
 		if @@rowcount=0 break
 		select @i2=0, @Sql=null, @Sql2=null
 		while 1=1
 			begin
-			select @i2=index_column_id, 
+			select @i2=index_column_id,
 				@Sql = case c.is_included_column when 1 then @Sql else isnull(@Sql + ', ', '(') + cc.Name + case c.is_descending_key when 1  then ' desc' else '' end end,
 				@Sql2 = case c.is_included_column when 0 then @Sql2 else isnull(@Sql2 + ', ', '(') + cc.Name + case c.is_descending_key when 1  then ' desc' else '' end end
 			from sys.index_columns c
@@ -1903,18 +1954,18 @@ GO
 			end
 		update @Data set D=D+@Sql +')' + isnull(' include' + @Sql2 + ')', '') where ic=@i
 		end
-		
+
 	-- references
 	set @i=0
 	while 1=1
 		begin
 		select top 1 @i=re from @Data where re>@i order by re
 		if @@rowcount=0 break
-		
+
 		select @i2=0, @Sql=null, @Sql2=null
 		while 1=1
 			begin
-			select @i2=f.constraint_column_id, 
+			select @i2=f.constraint_column_id,
 				@Sql = isnull(@Sql + ', ', '(') + c1.Name,
 				@Sql2 = isnull(@Sql2 + ', ', '(') + c2.Name
 			from sys.foreign_key_columns f
@@ -1929,7 +1980,7 @@ GO
 		update @Data set D = D + @Sql + ')'  where re=@i and ic=-1
 		update @Data set D = D + @Sql2 + ')'  where re=@i and ic=-2
 		end;
-	
+
 	-- Render
 	with x as(
 		select id=d.id-1, D=d.D + isnull(d2.D,'')
@@ -1937,22 +1988,22 @@ GO
 		left outer join @Data d2
 		on d.re=d2.re and d2.o=42
 		where d.o=41
-		
+
 	)
 	update @Data
 		set D=d.D+x.D
 	from @Data d
 	inner join x
 	on x.id=d.id
-	
+
 	delete @Data where o in(41, 42)
-	
+
 	select @Sql = 'create table ' + quotename(s.name) + '.' + quotename(o.name) + '(' + @f1
 	from sys.objects o
 	inner join sys.schemas s
 	on o.schema_id = s.schema_id
 	where o.object_id=@Id
-	
+
 	set @i=0
 	while 1=1
 		begin
@@ -1964,19 +2015,23 @@ GO
     SELECT @Sql";
                     text = SqlHelper.ExecuteScalar(sql, CurrentServerInfo) as string;
                     break;
+
                 case KeyJobs:
                     text = script;
                     break;
+
                 case KeyTriggers:
                     //http://sqlserver-qa.net/blogs/t-sql/archive/2008/12/11/5147.aspx
                     sql = string.Format("SELECT object_definition(m.object_id) FROM sys.sql_modules m LEFT JOIN sys.triggers t ON m.object_id = t.object_id WHERE t.name = '{0}'", parsedObjectName);
                     text = SqlHelper.ExecuteScalar(sql, CurrentServerInfo) as string;
                     break;
+
                 case KeyIndexes:
                     //http://blog.sqlauthority.com/2007/12/18/sql-server-get-information-of-index-of-tables-and-indexed-columns/
                     sql = string.Format("EXEC sp_helpindex '{0}'", parsedObjectName);
                     text = SqlHelper.ExecuteScalar(sql, CurrentServerInfo) as string;
                     break;
+
                 default:
                     if (objectMode != ObjectModes.None)
                     {
@@ -2173,26 +2228,33 @@ WHERE o.name = '" + parsedObjectName + "' AND u.name = '" + schemaName + "'" +
                             case ObjectModes.None:
                                 image = Resources.List2;
                                 break;
+
                             case ObjectModes.Databases:
                                 image = Convert.ToInt32(dgvObjects.Rows[e.RowIndex].Cells[KeyValue].Value) == 0 ? Resources.Proxy2 : Resources.Server2;
                                 break;
+
                             case ObjectModes.Objects:
                             case ObjectModes.Table:
                                 image = Resources.Table2;
                                 break;
+
                             case ObjectModes.Sp:
                             case ObjectModes.Function:
                                 image = Resources.Gear2;
                                 break;
+
                             case ObjectModes.View:
                                 image = Resources.List2;
                                 break;
+
                             case ObjectModes.Trigger:
                                 image = Resources.Accelerator2;
                                 break;
+
                             case ObjectModes.Job:
                                 image = Resources.History2;
                                 break;
+
                             default:
                                 image = Resources.List2;
                                 break;
@@ -2282,9 +2344,11 @@ WHERE o.name = '" + parsedObjectName + "' AND u.name = '" + schemaName + "'" +
                 case WorkModes.Summary:
                     AddCommand(CommandRefresh, "Refresh", Resources.Refresh2);
                     break;
+
                 case WorkModes.Objects:
                     AddCommand(CommandRefresh, "Refresh", Resources.Refresh2);
                     break;
+
                 case WorkModes.Activities:
                     AddCommand(CommandRefresh, "Refresh", Resources.Refresh2);
                     var tbProcesses = AddCommand(CommandProcesses, "Processes", Resources.Gear2, true, (sn, ev) =>
@@ -2305,30 +2369,37 @@ WHERE o.name = '" + parsedObjectName + "' AND u.name = '" + schemaName + "'" +
                         case ActivityTypes.Process:
                             tbProcesses.Checked = true;
                             break;
+
                         case ActivityTypes.Job:
                             tbJobs.Checked = true;
                             break;
+
                         default:
                             break;
                     }
                     SetActivityType(Settings.Instance.ActivityType);
                     SetSeparator(true);
                     break;
+
                 case WorkModes.Analysis:
                 case WorkModes.Alerts:
                     AddCommand(CommandRefresh, "Refresh", Resources.Refresh2);
                     break;
+
                 case WorkModes.Histories:
                     AddCommand(CommandRefresh, "Refresh", Resources.Refresh2);
                     AddCommand(CommandDelete, "Clear", Resources.Cross2, false, OnClearHistoriesClick);
                     SetSeparator(true);
                     break;
+
                 case WorkModes.Query:
                     AddCommand(CommandRefresh, "Execute", GetExecuteIcon());
                     break;
+
                 case WorkModes.TableData:
                     AddCommand(CommandRefresh, "Execute", GetExecuteIcon());
                     break;
+
                 default:
                     AddCommand(CommandRefresh, "Refresh", Resources.Refresh2);
                     break;
@@ -2345,10 +2416,12 @@ WHERE o.name = '" + parsedObjectName + "' AND u.name = '" + schemaName + "'" +
                     var queryData = tcMain.SelectedTab.Controls[0] as UserQuery;
                     icon = queryData.IsRunning ? Resources.Cross2 : Resources.Refresh2;
                     break;
+
                 case WorkModes.TableData:
                     var tableData = tcMain.SelectedTab.Controls[0] as UserTableData;
                     icon = tableData.IsRunning ? Resources.Cross2 : Resources.Refresh2;
                     break;
+
                 default:
                     icon = null;
                     break;
@@ -2384,6 +2457,7 @@ WHERE o.name = '" + parsedObjectName + "' AND u.name = '" + schemaName + "'" +
                                 SqlHelper.ExecuteNonQuery(string.Format("EXEC sp_rename '{0}', '{1}'", e.Node.Text, newObjectName), CurrentServerInfo);
                         }
                         break;
+
                     default:
                         e.CancelEdit = true;
                         break;
@@ -2469,22 +2543,30 @@ WHERE o.name = '" + parsedObjectName + "' AND u.name = '" + schemaName + "'" +
             {
                 case "P":
                     return ObjectModes.Sp;
+
                 case "U":
                     return ObjectModes.Table;
+
                 case "V":
                     return ObjectModes.View;
+
                 case "FN":
                 case "IF":
                 case "TF":
                     return ObjectModes.Function;
+
                 case "TR":
                     return ObjectModes.Trigger;
+
                 case "JOB":
                     return ObjectModes.Job;
+
                 case "PK":
                     return ObjectModes.Index;
+
                 case "IDX":
                     return ObjectModes.Index;
+
                 default:
                     return ObjectModes.None;
             }
@@ -2517,7 +2599,7 @@ WHERE o.name = '" + parsedObjectName + "' AND u.name = '" + schemaName + "'" +
                             using (NewWait())
                             {
                                 //triggers: http://dbscripter.codeplex.com/SourceControl/changeset/view/508aacd6909d?ProjectName=dbscripter#ObjectHelper%2fSQL%2fTriggers_9.sql
-                                var triggers = Query(@"select 
+                                var triggers = Query(@"select
 	s.name as SchemaName,
 	t.name,
 	t.create_date AS CreateDate,
@@ -2595,7 +2677,7 @@ left join sys.schemas s2 on s2.schema_id = o.schema_id
                                         }
                                     });
 
-                                    var triggerText = Query(string.Format(@"select 
+                                    var triggerText = Query(string.Format(@"select
 	t.name,
 	t.create_date AS CreateDate,
     t.modify_date AS ModifyDate,
@@ -2726,14 +2808,17 @@ left join sys.schemas s2 on s2.schema_id = o.schema_id
                             if (server != null)
                                 OpenTable(server, o.Database, o.ObjectName);
                             break;
+
                         case RecentObjectTypes.FilePath:
                             if (server != null)
                                 NewQuery(server, o.Database, o.ObjectType, o.ObjectName);
                             break;
+
                         case RecentObjectTypes.Other:
                             if (server != null)
                                 NewQuery(server, o.Database, o.ObjectType, o.ObjectName);
                             break;
+
                         default:
                             break;
                     }
@@ -2781,12 +2866,15 @@ left join sys.schemas s2 on s2.schema_id = o.schema_id
                     case KeyView:
                         sql = "SELECT * FROM " + objectName;
                         break;
+
                     case KeyFunction:
                         sql = "SELECT " + objectName + "()";
                         break;
+
                     case KeySp:
                         sql = "EXEC " + objectName;
                         break;
+
                     default:
                         if (File.Exists(objectName))
                             sql = File.ReadAllText(objectName);
@@ -2818,8 +2906,8 @@ ALTER DATABASE {0} SET SINGLE_USER
 
 RESTORE DATABASE {0}
 	FROM  DISK = N'{1}'
-WITH  
-	FILE = 1,  
+WITH
+	FILE = 1,
 	REPLACE,
 	STATS = 10
 
@@ -2866,6 +2954,7 @@ ALTER DATABASE {0} SET MULTI_USER", dlg.ObjectName, dlg.FilePath), DefaultServer
                         }
                         tcMain.TabPages.Remove(tcMain.SelectedTab);
                         break;
+
                     default:
                         break;
                 }
@@ -2983,20 +3072,20 @@ ALTER DATABASE {0} SET MULTI_USER", dlg.ObjectName, dlg.FilePath), DefaultServer
                                         //unusded index
                                         var indexSql = @"SELECT OBJECT_SCHEMA_NAME(I.OBJECT_ID) AS SchemaName,
 OBJECT_NAME(I.OBJECT_ID) AS ObjectName,
-I.NAME AS IndexName 
-FROM sys.indexes I 
+I.NAME AS IndexName
+FROM sys.indexes I
 WHERE -- only get indexes for user created tables
-OBJECTPROPERTY(I.OBJECT_ID, 'IsUserTable') = 1 
+OBJECTPROPERTY(I.OBJECT_ID, 'IsUserTable') = 1
 -- find all indexes that exists but are NOT used
-AND NOT EXISTS ( 
-SELECT index_id 
+AND NOT EXISTS (
+SELECT index_id
 FROM sys.dm_db_index_usage_stats
-WHERE OBJECT_ID = I.OBJECT_ID 
-AND I.index_id = index_id 
+WHERE OBJECT_ID = I.OBJECT_ID
+AND I.index_id = index_id
 -- limit our query only for the current db
 AND database_id = DB_ID()
 AND (user_seeks >0 OR user_scans > 0)
-) 
+)
 and I.is_primary_key = 0 and I.is_unique = 0
 AND I.NAME IS NOT NULL
 ORDER BY SchemaName, ObjectName, IndexName";
@@ -3030,6 +3119,7 @@ ORDER BY D.index_handle, D.statement";
                                             analysisResult.Add(new AnalysisResult { ResultType = AnalysisResultTypes.TableIndexUsage, ObjectName = i.Key, ReferenceValue = 0, CurrentValue = 0, Factor = "0", Key = 1, RuntimeValue = string.Join(",", columns) });
                                         });
                                         break;
+
                                     case AnalysisTypes.DatabasesSpace:
                                         //database & disk free space
                                         var spaces = QueryEngine.GetDiskSpace(DefaultServerInfo);
@@ -3046,6 +3136,7 @@ ORDER BY D.index_handle, D.statement";
                                                 analysisResult.Add(new AnalysisResult { ResultType = AnalysisResultTypes.DatabaseLogSpace, ObjectName = s.Key, ReferenceValue = s.Value.Item1, CurrentValue = s.Value.Item2, Factor = Settings.Instance.DatabaseDataLogSpaceRatio + SizePercentage, Key = s.Value.Item3 ? 1 : 0 });
                                             });
                                         break;
+
                                     case AnalysisTypes.TablesSpace:
                                         //sub rule 1: data/index space ratio
                                         //sub rule 2: db / table space ratio
@@ -3066,6 +3157,7 @@ ORDER BY D.index_handle, D.statement";
                                                 }
                                             });
                                         break;
+
                                     case AnalysisTypes.Performance:
                                         var databaseStalls = QueryEngine.GetDatabaseStall(DefaultServerInfo);
                                         databaseStalls.ForEach(db =>
@@ -3074,6 +3166,7 @@ ORDER BY D.index_handle, D.statement";
                                                 analysisResult.Add(new AnalysisResult { ResultType = AnalysisResultTypes.Performance, ObjectName = db.Database, ReferenceValue = QueryEngine.DbStallThreshold, CurrentValue = db.Max, Factor = "", Key = db.IsExceeded ? 1 : 0, RuntimeValue = runtime });
                                             });
                                         break;
+
                                     case AnalysisTypes.LogicFault:
                                         var spScripts = QueryEngine.GetSpScripts(CurrentServerInfo);
                                         spScripts.AsEnumerable().ForEach(s =>
@@ -3143,7 +3236,6 @@ ORDER BY D.index_handle, D.statement";
                                                                     if (cursorInstances.ContainsKey(objectName))
                                                                         cursorInstances[objectName].Value--;
                                                                 }
-
                                                                 else if (l.StartsWith(createTempTable))
                                                                 {
                                                                     objectName = l.Substring(createTempTable.Length - 1).ParseObjectName();
@@ -3193,6 +3285,7 @@ ORDER BY D.index_handle, D.statement";
                                                 }
                                             });
                                         break;
+
                                     default:
                                         break;
                                 }
@@ -3221,10 +3314,13 @@ ORDER BY D.index_handle, D.statement";
                                                 row[AnalysisColumnReference] = a.ReferenceValue + " " + Utils.SizeMb;
                                                 row[AnalysisColumnCurrent] = a.CurrentValue + " " + Utils.SizeMb;
                                                 break;
+
                                             case AnalysisResultTypes.TableIndexUsage:
                                                 break;
+
                                             case AnalysisResultTypes.Fault:
                                                 break;
+
                                             case AnalysisResultTypes.Performance:
                                                 switch (a.Key)
                                                 {
@@ -3233,12 +3329,15 @@ ORDER BY D.index_handle, D.statement";
                                                         row[AnalysisColumnReference] = a.ReferenceValue + " " + Utils.TimeMs;
                                                         row[AnalysisColumnCurrent] = a.CurrentValue + " " + Utils.TimeMs;
                                                         break;
+
                                                     default:
                                                         break;
                                                 }
                                                 break;
+
                                             case AnalysisResultTypes.None:
                                                 break;
+
                                             default:
                                                 break;
                                         }
@@ -3250,6 +3349,7 @@ ORDER BY D.index_handle, D.statement";
                                                 row[AnalysisColumnRule] = "Disk Free Space";
                                                 row[AnalysisColumnSuggestion] = "Increase disk space";
                                                 break;
+
                                             case AnalysisResultTypes.DatabaseLogSpace:
                                                 row[AnalysisColumnRule] = "Database Data/Log Space";
 
@@ -3258,10 +3358,12 @@ ORDER BY D.index_handle, D.statement";
                                                 else
                                                     row[AnalysisColumnSuggestion] = "Shrink log";
                                                 break;
+
                                             case AnalysisResultTypes.TableIndexSpace:
                                                 row[AnalysisColumnRule] = "Table Data/Index Space";
                                                 row[AnalysisColumnSuggestion] = "Optimize index";
                                                 break;
+
                                             case AnalysisResultTypes.TableIndexUsage:
                                                 row[AnalysisColumnRule] = "Table Index Usage";
                                                 if (a.Key == 0)
@@ -3269,10 +3371,12 @@ ORDER BY D.index_handle, D.statement";
                                                 else if (a.Key == 1)
                                                     row[AnalysisColumnSuggestion] = "Create index for " + a.RuntimeValue;
                                                 break;
+
                                             case AnalysisResultTypes.Fault:
                                                 row[AnalysisColumnRule] = "Logic Fault";
                                                 row[AnalysisColumnSuggestion] = a.RuntimeValue;
                                                 break;
+
                                             case AnalysisResultTypes.Performance:
                                                 row[AnalysisColumnRule] = "Database Stall";
                                                 if (a.Key == 1)
@@ -3280,15 +3384,18 @@ ORDER BY D.index_handle, D.statement";
                                                 else
                                                     row[AnalysisColumnSuggestion] = a.RuntimeValue;
                                                 break;
+
                                             case AnalysisResultTypes.None:
                                                 row[AnalysisColumnRule] = "(Analysis finished.)";
                                                 break;
+
                                             default:
                                                 break;
                                         }
                                         data.Rows.Add(row);
                                     });
                                 break;
+
                             case AnalysisTypes.WaitingTasks:
                             case AnalysisTypes.Cpu:
                             case AnalysisTypes.ExecutionCount:
@@ -3299,24 +3406,27 @@ ORDER BY D.index_handle, D.statement";
                                     case AnalysisTypes.LockedObjects:
                                         sql = QueryEngine.SqlLockedObjects;
                                         break;
+
                                     case AnalysisTypes.WaitingTasks:
                                         sql = QueryEngine.SqlWaitingTasks;
                                         break;
+
                                     case AnalysisTypes.ExecutionCount:
-                                        sql = @"SELECT TOP 20 getdate() as [Log Time], 
+                                        sql = @"SELECT TOP 20 getdate() as [Log Time],
         qs.execution_count AS [Execution Count],qs.plan_generation_num AS [Plan Generation Num],
-        SUBSTRING(qt.text,qs.statement_start_offset/2, 
-                  (case when qs.statement_end_offset = -1 
-                  then len(convert(nvarchar(max), qt.text)) * 2 
-                  else qs.statement_end_offset end -qs.statement_start_offset)/2) 
+        SUBSTRING(qt.text,qs.statement_start_offset/2,
+                  (case when qs.statement_end_offset = -1
+                  then len(convert(nvarchar(max), qt.text)) * 2
+                  else qs.statement_end_offset end -qs.statement_start_offset)/2)
             as [Query Text],
             qt.dbid AS [DB Id], d.name AS [DB Name],
-            qt.objectid AS [Object Id] 
+            qt.objectid AS [Object Id]
 FROM sys.dm_exec_query_stats qs
 cross apply sys.dm_exec_sql_text(qs.sql_handle) as qt
 left join sys.databases d on qt.dbid = d.database_id
 ORDER BY qs.execution_count DESC";
                                         break;
+
                                     case AnalysisTypes.Io:
                                         sql = @"select top 20 getdate() as [Log Time]
     ,       creation_time AS [Creation time]
@@ -3324,9 +3434,9 @@ ORDER BY qs.execution_count DESC";
     ,       case when sql_handle IS NULL
                     then ' '
                     else ( substring(st.text,(qs.statement_start_offset+2)/2,
-                (case when qs.statement_end_offset = -1        
-                    then len(convert(nvarchar(MAX),st.text))*2      
-                    else qs.statement_end_offset    
+                (case when qs.statement_end_offset = -1
+                    then len(convert(nvarchar(MAX),st.text))*2
+                    else qs.statement_end_offset
                 end - qs.statement_start_offset) /2  ) )
             end as [Query Text]
     ,       (total_worker_time+0.0)/1000 as [Total Worker Time]
@@ -3343,12 +3453,13 @@ ORDER BY qs.execution_count DESC";
     cross apply sys.dm_exec_sql_text(sql_handle) st
     cross apply sys.dm_exec_plan_attributes(plan_handle) as qp
     left join sys.databases d on qp.value = d.database_id
-    where total_logical_reads+total_logical_writes > 0 
-    and qp.attribute = 'dbid' 
+    where total_logical_reads+total_logical_writes > 0
+    and qp.attribute = 'dbid'
     order by [Total IO] desc";
                                         break;
+
                                     case AnalysisTypes.Cpu:
-                                        sql = @"select 
+                                        sql = @"select
     highest_cpu_queries.last_execution_time AS [Last Execution Time],
     highest_cpu_queries.execution_count AS [Execution Count],
     highest_cpu_queries.total_worker_time AS [Total Worker Time],
@@ -3359,22 +3470,23 @@ ORDER BY qs.execution_count DESC";
     q.number AS Number,
     q.encrypted AS [Encrypted]
     -- highest_cpu_queries.plan_handle
-from 
-    (select top 20 
+from
+    (select top 20
         qs.last_execution_time,
         qs.execution_count,
-        qs.plan_handle, 
+        qs.plan_handle,
         qs.total_worker_time
-    from 
+    from
         sys.dm_exec_query_stats qs
     order by qs.total_worker_time desc) as highest_cpu_queries
     cross apply sys.dm_exec_sql_text(plan_handle) as q
     cross apply sys.dm_exec_plan_attributes(plan_handle) as qp
     left join sys.databases d on qp.value = d.database_id
-WHERE DATEDIFF(hour, last_execution_time, getdate()) < 1 -- change hour time frame 
-and qp.attribute = 'dbid' 
+WHERE DATEDIFF(hour, last_execution_time, getdate()) < 1 -- change hour time frame
+and qp.attribute = 'dbid'
 order by highest_cpu_queries.total_worker_time desc";
                                         break;
+
                                     default:
                                         break;
                                 }
@@ -3410,21 +3522,27 @@ order by highest_cpu_queries.total_worker_time desc";
                                     case AnalysisTypes.LogicFault:
                                         dgvAnalysis.GroupTemplate.Column = dgvAnalysis.Columns["Rule"];
                                         break;
+
                                     case AnalysisTypes.LockedObjects:
                                         dgvAnalysis.GroupTemplate.Column = dgvAnalysis.Columns["SPID"];
                                         break;
+
                                     case AnalysisTypes.WaitingTasks:
                                         dgvAnalysis.GroupTemplate.Column = dgvAnalysis.Columns["[Wait Type]"];
                                         break;
+
                                     case AnalysisTypes.ExecutionCount:
                                         dgvAnalysis.GroupTemplate.Column = dgvAnalysis.Columns["DB Name"];
                                         break;
+
                                     case AnalysisTypes.Io:
                                         dgvAnalysis.GroupTemplate.Column = dgvAnalysis.Columns["[DB Name]"];
                                         break;
+
                                     case AnalysisTypes.Cpu:
                                         dgvAnalysis.GroupTemplate.Column = dgvAnalysis.Columns["[DB Name]"];
                                         break;
+
                                     default:
                                         break;
                                 }
@@ -3489,6 +3607,7 @@ order by highest_cpu_queries.total_worker_time desc";
                         case AnalysisTypes.LogicFault:
                             text = dgvAnalysis.Rows[e.RowIndex].Cells["Suggestion"].Value.ToString();
                             break;
+
                         case AnalysisTypes.LockedObjects:
                             var spid = dgvAnalysis.Rows[e.RowIndex].Cells["SPID"].Value;
                             if (spid != null && !string.IsNullOrEmpty(spid.ToString()))
@@ -3498,11 +3617,13 @@ order by highest_cpu_queries.total_worker_time desc";
                             if (id != null && !string.IsNullOrEmpty(id.ToString()))
                                 text = QueryEngine.GetSessionSql(id.ToString(), DefaultServerInfo);
                             break;
+
                         case AnalysisTypes.ExecutionCount:
                         case AnalysisTypes.Io:
                         case AnalysisTypes.Cpu:
                             text = dgvAnalysis.Rows[e.RowIndex].Cells[3].Value as string;
                             break;
+
                         default:
                             break;
                     }
@@ -3525,6 +3646,7 @@ order by highest_cpu_queries.total_worker_time desc";
                 case KeyFunction:
                 case KeyDatabase:
                     break;
+
                 default:
                     e.CancelEdit = true;
                     break;
@@ -3617,6 +3739,7 @@ order by highest_cpu_queries.total_worker_time desc";
                     cboAlertConditionTypes.Items.Add("Table Is Empty");
                     targetEnable = true;
                     break;
+
                 case AlertTypes.Server:
                     cboAlertConditionTypes.Items.Add("Unavailable");
                     break;
@@ -3665,6 +3788,7 @@ order by highest_cpu_queries.total_worker_time desc";
                 {
                     case AlertTypes.Sql:
                         break;
+
                     case AlertTypes.Server:
                         break;
                     //case AlertTypes.CPU:
@@ -3715,13 +3839,16 @@ order by highest_cpu_queries.total_worker_time desc";
                         case 2:
                             enableValue = false;
                             break;
+
                         case 1:
                             metrict = "Seconds";
                             break;
+
                         default:
                             break;
                     }
                     break;
+
                 case AlertTypes.Server:
                     enableValue = false;
                     break;
@@ -3769,6 +3896,7 @@ order by highest_cpu_queries.total_worker_time desc";
             {
                 case AnalysisTypes.LockedObjects:
                     break;
+
                 case AnalysisTypes.WaitingTasks:
                     if (dgvAnalysis.Columns[e.ColumnIndex].Name == "[Blocking Session Id]")
                     {
@@ -3782,12 +3910,16 @@ order by highest_cpu_queries.total_worker_time desc";
                         }
                     }
                     break;
+
                 case AnalysisTypes.ExecutionCount:
                     break;
+
                 case AnalysisTypes.Io:
                     break;
+
                 case AnalysisTypes.Cpu:
                     break;
+
                 default:
                     break;
             }
@@ -3840,6 +3972,7 @@ order by highest_cpu_queries.total_worker_time desc";
                     case KeyTable:
                         OpenTable();
                         break;
+
                     default:
                         break;
                 }
@@ -3998,7 +4131,6 @@ order by highest_cpu_queries.total_worker_time desc";
                     var item = (KeyValuePair<string, int>)cboObjectScriptVersions.Items[cboObjectScriptVersions.SelectedIndex - 1];
                     previousVersion = item.Value;
                 }
-
             }
             using (var dlg = new DiffResults(previousVersion, currentVersion))
             {
@@ -4093,28 +4225,34 @@ order by highest_cpu_queries.total_worker_time desc";
                         case -1:
                             color = Color.Red;
                             break;
+
                         case 1:
                             color = e.CellStyle.ForeColor;
                             break;
+
                         default:
                             color = Color.Gray;
                             break;
                     }
                     break;
+
                 case ActivityTypes.Job:
                     switch (status)
                     {
                         case 0:
                             color = Color.Red;
                             break;
+
                         case 1:
                             color = e.CellStyle.ForeColor;
                             break;
+
                         default:
                             color = Color.Gray;
                             break;
                     }
                     break;
+
                 default:
                     color = e.CellStyle.ForeColor;
                     break;
@@ -4240,6 +4378,7 @@ order by highest_cpu_queries.total_worker_time desc";
                             break;
                         }
                         break;
+
                     default:
                         break;
                 }
@@ -4351,24 +4490,31 @@ order by highest_cpu_queries.total_worker_time desc";
                         case HealthTypes.ServerMemory:
                             ShowPerformance();
                             break;
+
                         case HealthTypes.ServerCpu:
                             ShowPerformance();
                             break;
+
                         case HealthTypes.ServerSpace:
                             ShowAnalysis(AnalysisTypes.DatabasesSpace);
                             break;
+
                         case HealthTypes.DatabaseLogSpace:
                             ShowAnalysis(AnalysisTypes.DatabasesSpace);
                             break;
+
                         case HealthTypes.DatabaseStall:
                             ShowAnalysis(AnalysisTypes.Performance);
                             break;
+
                         case HealthTypes.BlockedProcess:
                             ShowActivities();
                             break;
+
                         case HealthTypes.LockedObjects:
                             ShowAnalysis(AnalysisTypes.LockedObjects);
                             break;
+
                         default:
                             break;
                     }
